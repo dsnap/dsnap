@@ -1368,6 +1368,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 		return -ENOMEM;
 	}
 
+	loki_create_blob_watch("rx_ring",adapter->tx_ring,sizeof(struct e1000_rx_ring));	
 	return E1000_SUCCESS;
 }
 
