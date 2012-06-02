@@ -1,0 +1,4 @@
+make  -C /lib/modules/3.3.4-ARCH/build M=/root/Loki/users/sowles modules
+make[1]: Entering directory `/root/linux-3.3.4'
+  CC [M]  /root/Loki/users/sowles/loki.o
+make[1]: Leaving directory `/root/linux-3.3.4'
