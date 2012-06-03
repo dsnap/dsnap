@@ -142,6 +142,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x9e7d6bd0, "__udelay" },
 	{ 0x3a044fd8, "dma_ops" },
 	{ 0xd0034574, "device_set_wakeup_enable" },
+	{ 0xc2d711e1, "krealloc" },
 	{ 0xf20dabd8, "free_irq" },
 	{ 0xabef3552, "pci_save_state" },
 	{ 0xe914e41e, "strcpy" },
@@ -191,4 +192,4 @@ MODULE_ALIAS("pci:v00008086d00001099sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d000010B5sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d00002E6Esv*sd*bc*sc*i*");
 
-MODULE_INFO(srcversion, "A85661AC090C7B1129DBF34");
+MODULE_INFO(srcversion, "C2B9EBB1B2EEC2845C0F9FD");
