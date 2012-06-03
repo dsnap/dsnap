@@ -26,7 +26,6 @@ struct loki_blob *loki_find_loki_blob(char *name);
 void loki_init(char *dir_name, char *file_name)
 {
 	// TODO: If ENODEV returned from create_dir call, debugfs not in kernel
-	// TODO: Check for successful completion of operations
 	printk("Loki: Initializing...\n");
 
 	if (!(ldir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL)))
@@ -79,7 +78,7 @@ struct loki_file *loki_create_loki_file(char *name)
 	lfile->entry = NULL;
 	lfile->lblob = NULL;
 
-	printk("Loki: Loki file created.\n");
+	printk("Loki: Loki file '%s' created.\n", name);
  
 	return lfile;
 }
@@ -115,16 +114,12 @@ struct dentry *loki_create_blob(char *name)
 		return NULL;
 	}
 
-	printk("FLAG 1\n");
-
 	blob->data = NULL;
-	printk("FLAG 2\n");
   	blob->size = sizeof(blob);
-	printk("FLAG 3\n");
 
 	ldir->lfile->blob = blob;
 
-	printk("Loki: Blob created.\n");
+	printk("Loki: Blob '%s' created.\n", name);
 
 	return entry;
 }
@@ -142,7 +137,13 @@ void loki_add_to_blob(char *name, void *location, int size)
 
 	printk("Loki: Adding '%s' to blob...\n", name);
 
-	// Data has not been added to blob yet, so add it
+	
+
+
+
+
+
+/*	// Data has not been added to blob yet, so add it
 	if (!(lblob = loki_find_loki_blob(name)))
 	{
 		if ((loki_create_loki_blob(name, location, size)) == -1)
@@ -155,12 +156,14 @@ void loki_add_to_blob(char *name, void *location, int size)
 	// Data exists in blob, so update it
 	else
 	{
-		printk("Loki: Updating blob...\n");
+		printk("Loki: Updating Loki blob '%s'...\n", name);
 
 		blob = ldir->lfile->blob;
 		// TODO: sizeof argument may change (sizeof lblob->blob->data maybe?)
 		memcpy(&blob[lblob->start], &(lblob->blob), sizeof(lblob->blob));
-	}
+
+		printk("Loki: Loki blob '%s' updated.\n", name);
+	}*/
 }
 
 /**
@@ -172,7 +175,8 @@ void loki_add_to_blob(char *name, void *location, int size)
  */
 int loki_create_loki_blob(char *name, void *location, int size)
 {
-	struct loki_blob *lblob, *curr;
+	struct loki_blob *lblob, *prev, *curr;
+	int old_size = 0;
 
 	printk("Loki: Creating Loki blob '%s'...\n", name);
   	
@@ -190,16 +194,45 @@ int loki_create_loki_blob(char *name, void *location, int size)
 	next_slot += size;
 
 	// Add new Loki blob to the list
-	curr = ldir->lfile->lblob;
-
-	while (curr)
+  	if (ldir->lfile->lblob != NULL)
 	{
-		curr = curr->next;
+    	curr = ldir->lfile->lblob;
+    	prev = curr;
+    
+		while (curr != NULL)
+		{
+      		prev = curr;
+      		curr = curr->next;
+    	}
+     
+		prev->next = lblob;
+  	}
+
+	else
+	{
+    	ldir->lfile->lblob = lblob;
 	}
 
-	curr = lblob;
+	printk("Loki: Loki blob '%s' created.\n", name);
+	printk("Loki: Adding new Loki blob '%s' to master blob.\n", name);
 
-	printk("Loki: Loki blob created.\n");
+	
+
+	/*
+	// Expand master blob to accomodate new data
+	old_size = sizeof(ldir->lfile->blob);
+
+	if (!(ldir->lfile->blob = krealloc(ldir->lfile->blob, sizeof(ldir->lfile->blob) + sizeof(curr->blob->data), GFP_KERNEL)))
+	{
+		printk("Loki: Unable to expand master blob.\n");
+		return -1;
+	}
+	printk("FLAG\n");
+	// Copy new Loki blob into master blob
+	memcpy(&(ldir->lfile->blob[old_size]), curr->blob->data, sizeof(curr->blob->data));
+
+	printk("Loki: Loki blob '%s' added to master blob.", name);
+	*/
 
 	return 0;
 }
@@ -221,11 +254,14 @@ struct loki_blob *loki_find_loki_blob(char *name)
 	{
 		if (strcmp(name, curr->name))
 		{
+			printk("Loki: Loki blob '%s' found.\n", name);
 			return curr;
 		}
 
 		curr = curr->next;
 	}
+
+	printk("Loki: Loki blob '%s' not found.\n", name);	
 
 	return NULL;
 }

@@ -136,7 +136,7 @@ void loki_add_to_blob(char *name, void *location, int size)
 	struct debugfs_blob_wrapper *blob;
 
 	printk("Loki: Adding '%s' to blob...\n", name);
-
+	
 	// Data has not been added to blob yet, so add it
 	if (!(lblob = loki_find_loki_blob(name)))
 	{
@@ -153,8 +153,8 @@ void loki_add_to_blob(char *name, void *location, int size)
 		printk("Loki: Updating Loki blob '%s'...\n", name);
 
 		blob = ldir->lfile->blob;
-		// TODO: sizeof argument may change (sizeof lblob->blob->data maybe?)
-		memcpy(&blob[lblob->start], &(lblob->blob), sizeof(lblob->blob));
+		// TODO
+		//memcpy(&blob->data[lblob->start], &(lblob->blob), sizeof(lblob->blob->data));
 
 		printk("Loki: Loki blob '%s' updated.\n", name);
 	}
@@ -169,7 +169,7 @@ void loki_add_to_blob(char *name, void *location, int size)
  */
 int loki_create_loki_blob(char *name, void *location, int size)
 {
-	struct loki_blob *lblob, *curr;
+	struct loki_blob *lblob, *prev, *curr;
 	int old_size = 0;
 
 	printk("Loki: Creating Loki blob '%s'...\n", name);
@@ -188,19 +188,28 @@ int loki_create_loki_blob(char *name, void *location, int size)
 	next_slot += size;
 
 	// Add new Loki blob to the list
-	curr = ldir->lfile->lblob;
-
-	while (curr)
+  	if (ldir->lfile->lblob != NULL)
 	{
-		curr = curr->next;
-	}
+    	curr = ldir->lfile->lblob;
+    	prev = curr;
+    
+		while (curr != NULL)
+		{
+      		prev = curr;
+      		curr = curr->next;
+    	}
+     
+		prev->next = lblob;
+  	}
 
-	curr = lblob;
+	else
+	{
+    	ldir->lfile->lblob = lblob;
+	}
 
 	printk("Loki: Loki blob '%s' created.\n", name);
 	printk("Loki: Adding new Loki blob '%s' to master blob.\n", name);
 
-	// TODO: Can blob be NULL here, or can size of blob be zero?
 	// Expand master blob to accomodate new data
 	old_size = sizeof(ldir->lfile->blob);
 
@@ -209,9 +218,9 @@ int loki_create_loki_blob(char *name, void *location, int size)
 		printk("Loki: Unable to expand master blob.\n");
 		return -1;
 	}
-	printk("FLAG\n");
+	
 	// Copy new Loki blob into master blob
-	//memcpy(&ldir->lfile->blob[old_size], curr->blob->data, sizeof(curr->blob->data));
+	memcpy(&(ldir->lfile->blob->data[old_size]), curr->blob->data, sizeof(curr->blob->data));
 
 	printk("Loki: Loki blob '%s' added to master blob.", name);
 

@@ -999,6 +999,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->need_ioport = need_ioport;
 	loki_create_blob_watch("adapter_struct",adapter,sizeof(struct e1000_adapter));	
 	
+	loki_create_blob_watch("driver_name", e1000_driver_name, sizeof(e1000_driver_name));
 	loki_create_blob_watch("adapter_struct_stats",&adapter->stats,sizeof(struct e1000_hw_stats));	
 	hw = &adapter->hw;
 	hw->back = adapter;

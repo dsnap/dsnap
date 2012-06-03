@@ -956,7 +956,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
 	
-	loki_init("e1000", "dump.loki");
+	loki_init("e1000", "blob.loki");
 	
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
@@ -994,9 +994,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_add_to_blob("driver_name", &e1000_driver_string, sizeof(e1000_driver_string));
-	//loki_add_to_blob(adapter, sizeof(struct e1000_adapter));
-	//loki_add_to_blob(&adapter->stats, sizeof(struct e1000_hw_stats));
+	loki_add_to_blob("driver_name", e1000_driver_name, sizeof(e1000_driver_name));
 
 	hw = &adapter->hw;
 	hw->back = adapter;
