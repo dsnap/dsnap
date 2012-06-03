@@ -210,29 +210,8 @@ int loki_create_loki_blob(char *name, void *location, int size)
 		return -1;
 	}
 	printk("FLAG\n");
+	// Copy new Loki blob into master blob
 	//memcpy(&ldir->lfile->blob[old_size], curr->blob->data, sizeof(curr->blob->data));
-
-	/*
-	OLD WAY (USING MALLOC AND TEMP STORAGE)
-
-	if (!(temp_blob = kmalloc(sizeof(ldir->lfile->blob), GFP_KERNEL)))
-	{
-		printk("Loki: Unable to allocate memory for temporary blob.\n");
-		return -1;
-	}
-	
-	// Copy master blob into temporary space
-	memcpy(temp_blob, ldir->lfile->blob, sizeof(temp_blob));
-
-	// Expand master blob to accomodate new data
-	ldir->lfile->blob = kmalloc(sizeof(temp_blob) + sizeof(curr->blob), GFP_KERNEL);
-
-	// Copy data back into master blob
-	memcpy(ldir->lfile->blob, temp_blob, sizeof(temp_blob));
-	
-	// Copy new data into master blob
-	memcpy(ldir->lfile->blob + sizeof(temp_blob), curr->blob, sizeof(curr->blob));
-	*/
 
 	printk("Loki: Loki blob '%s' added to master blob.", name);
 
