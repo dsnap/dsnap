@@ -1,3 +1,6 @@
+def splitString(string, count):
+	return [''.join(x) for x in zip(*[list(string[z::count]) for z in range(count)])]
+
 # userspace.py - A rough draft implementation of the userspace tool in project Loki
 # A proof of concept/rough draft by John Sackey for Team 2.718
 
@@ -53,11 +56,23 @@ for i in range(blobcount):
 	dataItems.append( (name,itemSize,data))
 	
 #At this point dataItems is an array of tuples, and can be printed
-"""
+
+
 #As name/data pairs...	
+
+print "Name:      | Size: | Data: \n"
+i = 0
+for item in dataItems:
+	listtest = splitString(item[2],20)
+	liststr = "| "+listtest[0]+"\n"
+	liststr1 = ""
+	for x in range(1,len(listtest)):
+		liststr1 = liststr1 + "                   | "+listtest[x]+"\n"
+	print item[0] + "  | " + str(item[1]) + "    " + liststr + liststr1
+"""
 for item in dataItems:
 	print "name:"+item[0] +"\ndata:\n"+ item[2]
-	
+
 #As just a list of names
 for item in dataItems:
 	print "name:"+item[0]
@@ -70,12 +85,13 @@ for item in dataItems:
 for item in dataItems:
 	print "Data size of "+item[0]+": "+str(item[1])+" Bytes\n"
 """
-
+"""
 print "OFFSET                         HEX                              ASCII\n"
 for item in dataItems:
 	print hexdump(item[2],16)+"\n"
- 
+ """
 
 blobEnd, = unpack('I',blob.read(4))
 #print hex(blobEnd)
 blob.close()
+
