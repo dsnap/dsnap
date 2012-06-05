@@ -103,6 +103,9 @@ static void  loki_construct_blob(void)
 		//buffer overflow here need check
 		memcpy(c_ptr,curr->name,strlen(curr->name));
 		c_ptr +=80;
+		dw_master = (u32 *)c_ptr;
+		*dw_master = curr->size;
+		c_ptr+=4;
 		printk("Copied name");
 		memcpy(c_ptr,curr->loc,curr->size);
 		printk("Copied data");
