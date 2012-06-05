@@ -994,7 +994,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_add_to_blob("driver_name", e1000_driver_name, sizeof(e1000_driver_name));
+	loki_create_loki_blob("driver_name","e1000",strlen("e1000"));
+
 
 	hw = &adapter->hw;
 	hw->back = adapter;
@@ -1352,7 +1353,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 	if (!adapter->tx_ring)
 		return -ENOMEM;
 	
-	//loki_add_to_blob("tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
+	loki_create_loki_blob("tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
 	adapter->rx_ring = kcalloc(adapter->num_rx_queues,
 	                           sizeof(struct e1000_rx_ring), GFP_KERNEL);
 	if (!adapter->rx_ring) {
@@ -1360,7 +1361,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 		return -ENOMEM;
 	}
 
-	//loki_add_to_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	
 	return E1000_SUCCESS;
 }
 
@@ -1428,7 +1429,7 @@ static int e1000_open(struct net_device *netdev)
 
 	/* fire a link status change interrupt to start the watchdog */
 	ew32(ICS, E1000_ICS_LSC);
-
+	loki_create_loki_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
 	return E1000_SUCCESS;
 
 err_req_irq:

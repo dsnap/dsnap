@@ -1,3 +1,5 @@
+
+
 #include "loki.h"
 #include "e1000.h"
 
@@ -5,6 +7,10 @@
 // TODO: Global loki_dir variable
 // TODO: Error checking
 
+#define LOKI_START  0xdeadbeef
+#define LOKI_END  0xfeebdaed
+//4 bytes for start and end + 4 bytes for records
+#define LOKI_START_SIZE  12 
 //// GLOBAL VARIABLES ////
 
 int next_slot = 0;
@@ -14,8 +20,8 @@ struct loki_dir *ldir = NULL;
 
 struct loki_file *loki_create_loki_file(char *name);
 struct dentry *loki_create_blob(char *name);
-int loki_create_loki_blob(char *name, void *location, int size);
 struct loki_blob *loki_find_loki_blob(char *name);
+static void loki_construct_blob(void);
 
 //// FUNCTIONS ////
 
@@ -53,10 +59,65 @@ void loki_init(char *dir_name, char *file_name)
 		printk("Loki: Unable to create blob '%s' (dentry is NULL).\n", file_name);
 		return;
 	}
-
+	//set master size
+	ldir->lfile->tot_size = LOKI_START_SIZE; 
+	//allocate memory for master
+	if (!(ldir->lfile->master = (u8 *)kmalloc(LOKI_START_SIZE, GFP_KERNEL)))
+	{
+		printk("Loki: Unable to allocate memory for Loki master buffer.\n");
+		return;
+	}
+	//set debugfs blob to our master location
+	
+	//construct initial binary structure
+	loki_construct_blob();
+       
+  
 	printk("Loki: Initialization complete.\n");
 }
 
+/**
+ * Creates a Loki binary structure from lfiles.
+ * @name: the name of the file to create
+ * @return: a pointer to the created file
+ */
+static void  loki_construct_blob(void)
+{
+	struct loki_blob *curr;
+	struct loki_file *root = ldir->lfile;
+	u32 * dw_master = (u32 *)ldir->lfile->master;
+	u32 *end_of_blob = (u32 *)(root->master + (root->tot_size - 4));
+	u8  *c_ptr = root->master +8;
+	int i = 0;
+	//zero buffer
+	for (i=0; i<ldir->lfile->tot_size; i++)
+		root->master[i] = 0;
+
+
+	dw_master[0] = LOKI_START; 
+	dw_master[1] = root->records;
+
+	curr = ldir->lfile->lblob; 
+	while (curr != NULL)
+	{
+		//buffer overflow here need check
+		memcpy(c_ptr,curr->name,strlen(curr->name));
+		c_ptr +=80;
+		printk("Copied name");
+		memcpy(c_ptr,curr->loc,curr->size);
+		printk("Copied data");
+		c_ptr+=curr->size;
+		curr = curr->next;
+	}
+	
+	
+       
+	*end_of_blob = LOKI_END;	
+	root->blob->data = root->master;
+	root->blob->size = root->tot_size;
+  
+  
+}
 /**
  * Creates a Loki file.
  * @name: the name of the file to create
@@ -77,8 +138,11 @@ struct loki_file *loki_create_loki_file(char *name)
   	lfile->name = kstrdup(name, GFP_KERNEL); 
 	lfile->entry = NULL;
 	lfile->lblob = NULL;
-
-	printk("Loki: Loki file '%s' created.\n", name);
+	//Location of master buffer
+	lfile->records = 0;
+	lfile->tot_size = 0;
+	
+	
  
 	return lfile;
 }
@@ -137,7 +201,7 @@ void loki_add_to_blob(char *name, void *location, int size)
 
 	printk("Loki: Adding '%s' to blob...\n", name);
 	
-	// Data has not been added to blob yet, so add it
+        //Data has not been added to blob yet, so add it
 	if (!(lblob = loki_find_loki_blob(name)))
 	{
 		if ((loki_create_loki_blob(name, location, size)) == -1)
@@ -169,61 +233,50 @@ void loki_add_to_blob(char *name, void *location, int size)
  */
 int loki_create_loki_blob(char *name, void *location, int size)
 {
-	struct loki_blob *lblob, *prev, *curr;
-	int old_size = 0;
+	struct loki_blob *lblob,*curr;
 
+	int new_size = size + ldir->lfile->tot_size+80; //80 for the null terminated name 
 	printk("Loki: Creating Loki blob '%s'...\n", name);
-  	
+	
 	if (!(lblob = kmalloc(sizeof(struct loki_blob), GFP_KERNEL)))
 	{
 		printk("Loki: Unable to allocate memory for Loki blob '%s'.\n", name);
 		return -1;
 	}
 	
-	lblob->name = name;
-	lblob->start = next_slot;
-	lblob->end = lblob->start + size;
-	lblob->blob = location;
-
-	next_slot += size;
-
+	lblob->name = kstrdup(name,GFP_KERNEL);	
+	lblob->offset = ldir->lfile->tot_size - 4 ; //4bytes for ending string
+	lblob->size = size;
+	lblob->loc = location;
 	// Add new Loki blob to the list
-  	if (ldir->lfile->lblob != NULL)
-	{
-    	curr = ldir->lfile->lblob;
-    	prev = curr;
-    
-		while (curr != NULL)
-		{
-      		prev = curr;
-      		curr = curr->next;
-    	}
-     
-		prev->next = lblob;
-  	}
-
-	else
-	{
-    	ldir->lfile->lblob = lblob;
+	if (!ldir->lfile->lblob){
+	  ldir->lfile->lblob = lblob;
+	}else{
+	curr = ldir->lfile->lblob; 
+	while (curr && curr->next != NULL)
+	    curr = curr->next;
+	curr->next = lblob;    
 	}
-
+	lblob->next = NULL;
+       
 	printk("Loki: Loki blob '%s' created.\n", name);
 	printk("Loki: Adding new Loki blob '%s' to master blob.\n", name);
 
 	// Expand master blob to accomodate new data
-	old_size = sizeof(ldir->lfile->blob);
+	
 
-	if (!(ldir->lfile->blob = krealloc(ldir->lfile->blob, sizeof(ldir->lfile->blob) + sizeof(curr->blob->data), GFP_KERNEL)))
+	
+	if (!(ldir->lfile->master = krealloc(ldir->lfile->master,new_size, GFP_KERNEL)))
 	{
 		printk("Loki: Unable to expand master blob.\n");
 		return -1;
 	}
 	
-	// Copy new Loki blob into master blob
-	memcpy(&(ldir->lfile->blob->data[old_size]), curr->blob->data, sizeof(curr->blob->data));
-
-	printk("Loki: Loki blob '%s' added to master blob.", name);
-
+	//set new size and record count
+	ldir->lfile->tot_size = new_size;
+	ldir->lfile->records++;
+	
+	loki_construct_blob();
 	return 0;
 }
 
@@ -242,7 +295,7 @@ struct loki_blob *loki_find_loki_blob(char *name)
 
 	while (curr)
 	{
-		if (strcmp(name, curr->name))
+	  if ((strcmp(name, curr->name)) == 0)
 		{
 			printk("Loki: Loki blob '%s' found.\n", name);
 			return curr;
@@ -264,38 +317,6 @@ void loki_cleanup(void)
 	// TODO: This hasn't been done yet.  
   	printk("Loki: Cleaning up...\n");
   	
-	/*kfree(ldir->name);
-  
-  	struct loki_file *curr;
-  	struct loki_file *del;
-  	curr = loki_root->first_child;
-  
-	while (curr != NULL)
-	{
-    	printk("Deleting %s\n", curr->name);
-    	del = curr;
-    	debugfs_remove(del->entry);
-    	kfree(del->name);
-    
-		//Delete blob info if it is a blob node
-    	if (del->blob)
-		{
-    		kfree(del->blob->data);
-    		kfree(del->blob);
-    	}
-    
-		else if (del->blob_watch)
-		{
-      		kfree(del->blob);
-    	}
+	//	kfree(ldir->name);
 
-   		curr = curr->next;
-    	kfree(del);
-  	}*/
-    
-  	debugfs_remove(ldir->entry);
-  	kfree(ldir);
-  	ldir = NULL;
-	
-	printk("Loki: Cleanup complete.\n");
 }

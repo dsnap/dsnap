@@ -29,6 +29,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x67c5a03d, "debugfs_create_dir" },
 	{ 0x70f19da0, "mem_map" },
 	{ 0x3ec8886f, "param_ops_int" },
+	{ 0xd0d8621b, "strlen" },
 	{ 0x9cd40a58, "page_address" },
 	{ 0x89a7b303, "dev_set_drvdata" },
 	{ 0x7ce0601b, "dma_set_mask" },
@@ -67,7 +68,6 @@ __attribute__((section("__versions"))) = {
 	{ 0xb6ed1e53, "strncpy" },
 	{ 0x3e096d, "register_netdev" },
 	{ 0xb4390f9a, "mcount" },
-	{ 0x8597bc2f, "debugfs_remove" },
 	{ 0x73e20c1c, "strlcpy" },
 	{ 0x16305289, "warn_slowpath_null" },
 	{ 0x231dde1e, "__pci_enable_wake" },
@@ -192,4 +192,4 @@ MODULE_ALIAS("pci:v00008086d00001099sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d000010B5sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d00002E6Esv*sd*bc*sc*i*");
 
-MODULE_INFO(srcversion, "C7E5921024CF613CAF44A04");
+MODULE_INFO(srcversion, "31BF7CBC220F3BA572E50AD");
