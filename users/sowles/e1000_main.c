@@ -994,7 +994,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_create_loki_blob("driver_name","e1000",strlen("e1000"));
+	loki_create_loki_blob("driver_name","e1000",4);
 
 
 	hw = &adapter->hw;
@@ -1353,7 +1353,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 	if (!adapter->tx_ring)
 		return -ENOMEM;
 	
-	loki_create_loki_blob("tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
+	//loki_create_loki_blob("tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
 	adapter->rx_ring = kcalloc(adapter->num_rx_queues,
 	                           sizeof(struct e1000_rx_ring), GFP_KERNEL);
 	if (!adapter->rx_ring) {

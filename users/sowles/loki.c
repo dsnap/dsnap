@@ -238,7 +238,7 @@ int loki_create_loki_blob(char *name, void *location, int size)
 {
 	struct loki_blob *lblob,*curr;
 
-	int new_size = size + ldir->lfile->tot_size+80; //80 for the null terminated name 
+	int new_size = size + ldir->lfile->tot_size+80+4; //80 for the null terminated name 4 for size 
 	printk("Loki: Creating Loki blob '%s'...\n", name);
 	
 	if (!(lblob = kmalloc(sizeof(struct loki_blob), GFP_KERNEL)))
@@ -248,7 +248,7 @@ int loki_create_loki_blob(char *name, void *location, int size)
 	}
 	
 	lblob->name = kstrdup(name,GFP_KERNEL);	
-	lblob->offset = ldir->lfile->tot_size - 4 ; //4bytes for ending string
+	lblob->offset = ldir->lfile->tot_size+80; //4bytes for ending string
 	lblob->size = size;
 	lblob->loc = location;
 	// Add new Loki blob to the list
