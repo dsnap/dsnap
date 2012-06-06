@@ -59,6 +59,23 @@ for i in range(blobcount):
 
 
 
+def print_structs(name,data,level=0):
+	tabs = "\t" *level
+	map=pahole.get_map(name) 
+	if map:
+		print tabs+ "============"+name+"============"
+		for p in sorted(map.keys()):
+			t,name,size = map[p]
+			print tabs+"Name:"+ t+" "+name
+			print tabs+"Size:"+str(size)
+			print tabs+"Offset" +str(p)
+			if "struct" in t and "*" not in t:
+				print_structs(t.split("struct ")[1],data[p:p+size],level+1)
+			else:
+				print tabs+"Value:"+ hexdump(data[p:p+size],int(size))
+		return True
+	return False
+
 
 
 #As just a list of names
@@ -68,23 +85,18 @@ for item in dataItems:
 	map=None
 	data = item[2]
 	dsize = item[1]
-	map=pahole.get_map(name) 
-	print "============"+name+"============"
-	if map:
-
-		for p in sorted(map.keys()):
-			t,name,size = map[p]
-			print "\tName:"+ t+" "+name
-			print "\tSize:"+str(size)
-			print "\tOffset" +str(p)
-			print "\tValue:"+ hexdump(data[p:p+size],int(size))
+	print "*" *80 
+	if not print_structs(name,data):
+		print "============"+name+"============"
+		print hexdump(item[2],16)+"\n"
+	
 #Just the raw data
 
 
 
 
 # for item in dataItems:
-# 	print hexdump(item[2],16)+"\n"
+# 	
 
 
 # blobEnd, = unpack('I',blob.read(4))

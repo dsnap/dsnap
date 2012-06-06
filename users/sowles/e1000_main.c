@@ -1429,7 +1429,7 @@ static int e1000_open(struct net_device *netdev)
 
 	/* fire a link status change interrupt to start the watchdog */
 	ew32(ICS, E1000_ICS_LSC);
-	loki_add_to_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	
 	return E1000_SUCCESS;
 
 err_req_irq:
@@ -2451,7 +2451,8 @@ static void e1000_watchdog(struct work_struct *work)
 		return;
 
 	mutex_lock(&adapter->mutex);
-	loki_add_to_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("e1000_rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
 		goto link_up;
