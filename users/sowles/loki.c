@@ -18,9 +18,9 @@ struct loki_dir *ldir = NULL;
 
 //// PROTOTYPES ////
 
-struct loki_file *loki_create_loki_file(char *name);
-struct dentry *loki_create_blob(char *name);
-struct loki_blob *loki_find_loki_blob(char *name);
+static struct loki_file *loki_create_loki_file(char *name);
+static struct dentry *loki_create_blob(char *name);
+static struct loki_blob *loki_find_loki_blob(char *name);
 static void loki_construct_blob(void);
 
 //// FUNCTIONS ////
@@ -124,7 +124,7 @@ static void  loki_construct_blob(void)
  * @name: the name of the file to create
  * @return: a pointer to the created file
  */
-struct loki_file *loki_create_loki_file(char *name)
+static struct loki_file *loki_create_loki_file(char *name)
 {
 	struct loki_file *lfile;
 
@@ -154,7 +154,7 @@ struct loki_file *loki_create_loki_file(char *name)
  * @return: a pointer to the dentry object returned by the
  *			debugfs_create_blob call
  */
-struct dentry *loki_create_blob(char *name)
+static struct dentry *loki_create_blob(char *name)
 {
   	struct debugfs_blob_wrapper *blob;
 	struct dentry *entry;  
@@ -294,7 +294,7 @@ int loki_create_loki_blob(char *name, void *location, int size)
  * @name: the name of the Loki blob to find
  * @return: a pointer to the Loki blob if found, else null
  */
-struct loki_blob *loki_find_loki_blob(char *name)
+static struct loki_blob *loki_find_loki_blob(char *name)
 {
 	struct loki_blob *curr;
 
