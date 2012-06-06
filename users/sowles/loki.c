@@ -251,7 +251,7 @@ int loki_create_loki_blob(char *name, void *location, int size)
 	}
 	
 	lblob->name = kstrdup(name,GFP_KERNEL);	
-	lblob->offset = ldir->lfile->tot_size+84; //4bytes for ending string
+	lblob->offset = ldir->lfile->tot_size+80; //4bytes for ending string
 	lblob->size = size;
 	lblob->loc = location;
 	// Add new Loki blob to the list
