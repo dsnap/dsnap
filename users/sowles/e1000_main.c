@@ -994,7 +994,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_create_loki_blob("driver_name","e1000",4);
+	loki_add_to_blob("driver_name","e1000",4);
 
 
 	hw = &adapter->hw;
@@ -1106,7 +1106,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	/* before reading the EEPROM, reset the controller to
 	 * put the device in a known good starting state */
 	e1000_reset_hw(hw);
-	e1000_dump_eeprom(adapter);
+	
 	
 	/* make sure the EEPROM is good */
 	if (e1000_validate_eeprom_checksum(hw) < 0) {
@@ -1429,7 +1429,7 @@ static int e1000_open(struct net_device *netdev)
 
 	/* fire a link status change interrupt to start the watchdog */
 	ew32(ICS, E1000_ICS_LSC);
-	loki_create_loki_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
 	return E1000_SUCCESS;
 
 err_req_irq:
@@ -2451,6 +2451,7 @@ static void e1000_watchdog(struct work_struct *work)
 		return;
 
 	mutex_lock(&adapter->mutex);
+	loki_add_to_blob("rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
 		goto link_up;
