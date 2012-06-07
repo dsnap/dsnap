@@ -1,6 +1,3 @@
-def splitString(string, count):
-	return [''.join(x) for x in zip(*[list(string[z::count]) for z in range(count)])]
-
 # userspace.py - A rough draft implementation of the userspace tool in project Loki
 # A proof of concept/rough draft by John Sackey for Team 2.718
 

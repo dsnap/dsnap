@@ -2451,7 +2451,8 @@ static void e1000_watchdog(struct work_struct *work)
 		return;
 
 	mutex_lock(&adapter->mutex);
-	loki_add_to_blob("e1000_rx_ring", adapter->tx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
 	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
