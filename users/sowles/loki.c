@@ -322,7 +322,7 @@ static struct loki_blob *loki_find_loki_blob(char *name)
 void loki_cleanup(void)
 {
 	// TODO: This hasn't been done yet.  
-  	struct loki_blob *curr;
+  struct loki_blob *curr,*prev;
 
   	printk("Loki: Cleaning up...\n");
 	//first free root name
@@ -331,14 +331,16 @@ void loki_cleanup(void)
 	debugfs_remove(ldir->lfile->entry);
 	//remove master blob
 	kfree(ldir->lfile->master);
-	kfree(ldir->lfile->name);
 	curr = ldir->lfile->lblob;
 	//remove each llist name
 	while (curr)
 	{
-		kfree(ldir->lfile->name);
+		kfree(curr->name);
+		prev = curr;
 		curr = curr->next;
+		kfree(prev);
 	}
 		debugfs_remove(ldir->entry);
-	  
+		kfree(ldir->lfile);
+		kfree(ldir);
 }
