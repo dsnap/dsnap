@@ -1,8 +1,6 @@
 #include "loki.h"
 #include "e1000.h"
 
-// TODO: Global next_slot variable
-// TODO: Global loki_dir variable
 // TODO: Error checking
 
 #define LOKI_START  0xdeadbeef
@@ -12,10 +10,7 @@
 //4 bytes for start and end + 4 bytes for records
 #define LOKI_START_SIZE  12 
 //// GLOBAL VARIABLES ////
-
-int next_slot = 0;
 struct loki_dir *ldir = NULL;
-
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_loki_file(char *name);
@@ -327,8 +322,23 @@ static struct loki_blob *loki_find_loki_blob(char *name)
 void loki_cleanup(void)
 {
 	// TODO: This hasn't been done yet.  
-  	printk("Loki: Cleaning up...\n");
-  	
-	//	kfree(ldir->name);
+  	struct loki_blob *curr;
 
+  	printk("Loki: Cleaning up...\n");
+	//first free root name
+	kfree(ldir->name);
+
+	debugfs_remove(ldir->lfile->entry);
+	//remove master blob
+	kfree(ldir->lfile->master);
+	kfree(ldir->lfile->name);
+	curr = ldir->lfile->lblob;
+	//remove each llist name
+	while (curr)
+	{
+		kfree(ldir->lfile->name);
+		curr = curr->next;
+	}
+		debugfs_remove(ldir->entry);
+	  
 }
