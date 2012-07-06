@@ -39,12 +39,12 @@ struct loki_blob
 	char *name;
 	int offset;			// index of starting location in master blob
 	int size;			// index of ending location in master blob
-        void * loc;
+ 	void * loc;
 	struct loki_blob *next;
 
 };
 
-extern void loki_init(char *dir_name, char *file_name);
+extern void loki_init(char *dir_name, unsigned char bus_number);
 extern void loki_cleanup(void);
 extern void loki_add_to_blob(char *name, void *location, int size);
 extern int loki_create_loki_blob(char *name, void *location, int size);

@@ -14,8 +14,6 @@ __attribute__((section(".gnu.linkonce.this_module"))) = {
  .arch = MODULE_ARCH_INIT,
 };
 
-MODULE_INFO(intree, "Y");
-
 static const struct modversion_info ____versions[]
 __used
 __attribute__((section("__versions"))) = {
@@ -23,12 +21,15 @@ __attribute__((section("__versions"))) = {
 	{ 0xf0dc837, "__kmap_atomic" },
 	{ 0x3ce4ca6f, "disable_irq" },
 	{ 0xf24217d9, "netdev_info" },
+	{ 0xe5a422d3, "kmalloc_caches" },
 	{ 0x12da5bb2, "__kmalloc" },
 	{ 0x566f042f, "pcix_set_mmrbc" },
 	{ 0xf9a482f9, "msleep" },
 	{ 0x68e2f221, "_raw_spin_unlock" },
+	{ 0x67c5a03d, "debugfs_create_dir" },
 	{ 0x70f19da0, "mem_map" },
 	{ 0x3ec8886f, "param_ops_int" },
+	{ 0xd0d8621b, "strlen" },
 	{ 0x9cd40a58, "page_address" },
 	{ 0x89a7b303, "dev_set_drvdata" },
 	{ 0x7ce0601b, "dma_set_mask" },
@@ -49,9 +50,11 @@ __attribute__((section("__versions"))) = {
 	{ 0x47c7b0d2, "cpu_number" },
 	{ 0x8cc79cab, "iowrite16_rep" },
 	{ 0x7e65a7f0, "__alloc_pages_nodemask" },
+	{ 0xc499ae1e, "kstrdup" },
 	{ 0x7d11c268, "jiffies" },
 	{ 0x5028d5e6, "pcix_get_mmrbc" },
 	{ 0xe22a5eaa, "skb_trim" },
+	{ 0xe2d5255a, "strcmp" },
 	{ 0xf92e72e3, "__netdev_alloc_skb" },
 	{ 0x99f6ffcd, "__pskb_pull_tail" },
 	{ 0x73ba88d4, "pci_set_master" },
@@ -65,6 +68,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xb6ed1e53, "strncpy" },
 	{ 0x3e096d, "register_netdev" },
 	{ 0xb4390f9a, "mcount" },
+	{ 0x8597bc2f, "debugfs_remove" },
 	{ 0x73e20c1c, "strlcpy" },
 	{ 0x16305289, "warn_slowpath_null" },
 	{ 0x231dde1e, "__pci_enable_wake" },
@@ -101,6 +105,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x6ad9c0a0, "netdev_err" },
 	{ 0x29f7fc0b, "pci_unregister_driver" },
 	{ 0xcc5005fe, "msleep_interruptible" },
+	{ 0x9e9d2695, "kmem_cache_alloc_trace" },
 	{ 0x67f7403e, "_raw_spin_lock" },
 	{ 0xed072dc4, "pci_ioremap_bar" },
 	{ 0x21fb443e, "_raw_spin_lock_irqsave" },
@@ -113,6 +118,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x37a0cba, "kfree" },
 	{ 0x2e60bace, "memcpy" },
 	{ 0x47ff36bf, "___pskb_trim" },
+	{ 0x9db437e7, "debugfs_create_blob" },
 	{ 0xf59f197, "param_array_ops" },
 	{ 0x1daa9167, "dma_supported" },
 	{ 0xedc03953, "iounmap" },
@@ -123,6 +129,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xb352177e, "find_first_bit" },
 	{ 0x2cc51ec8, "dev_warn" },
 	{ 0x3a15925f, "unregister_netdev" },
+	{ 0xb81960ca, "snprintf" },
 	{ 0xdbedbf7e, "__netif_schedule" },
 	{ 0x4c8e57be, "consume_skb" },
 	{ 0xa37c592a, "pci_enable_device_mem" },
@@ -137,6 +144,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x9e7d6bd0, "__udelay" },
 	{ 0x3a044fd8, "dma_ops" },
 	{ 0xd0034574, "device_set_wakeup_enable" },
+	{ 0xc2d711e1, "krealloc" },
 	{ 0xf20dabd8, "free_irq" },
 	{ 0xabef3552, "pci_save_state" },
 	{ 0xe914e41e, "strcpy" },
@@ -186,4 +194,4 @@ MODULE_ALIAS("pci:v00008086d00001099sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d000010B5sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d00002E6Esv*sd*bc*sc*i*");
 
-MODULE_INFO(srcversion, "38FF5A7B421F44BE032D1CD");
+MODULE_INFO(srcversion, "2B797643D2B37E677ABC7A1");

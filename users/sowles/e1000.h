@@ -312,6 +312,9 @@ struct e1000_adapter {
 	struct delayed_work phy_info_task;
 
 	struct mutex mutex;
+
+	/* Loki */
+	
 };
 
 enum e1000_state_t {

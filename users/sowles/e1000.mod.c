@@ -129,6 +129,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xb352177e, "find_first_bit" },
 	{ 0x2cc51ec8, "dev_warn" },
 	{ 0x3a15925f, "unregister_netdev" },
+	{ 0xb81960ca, "snprintf" },
 	{ 0xdbedbf7e, "__netif_schedule" },
 	{ 0x4c8e57be, "consume_skb" },
 	{ 0xa37c592a, "pci_enable_device_mem" },
@@ -193,4 +194,4 @@ MODULE_ALIAS("pci:v00008086d00001099sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d000010B5sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d00002E6Esv*sd*bc*sc*i*");
 
-MODULE_INFO(srcversion, "47DCFB8740973A99CB6FB84");
+MODULE_INFO(srcversion, "2B797643D2B37E677ABC7A1");

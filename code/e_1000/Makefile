@@ -30,6 +30,12 @@
 # Makefile for the Intel(R) PRO/1000 ethernet driver
 #
 
-obj-$(CONFIG_E1000) += e1000.o
+obj-m += e1000.o
 
-e1000-objs := e1000_main.o e1000_hw.o e1000_ethtool.o e1000_param.o
+all:
+	make  -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+e1000-objs := e1000_main.o e1000_hw.o e1000_ethtool.o e1000_param.o loki.o

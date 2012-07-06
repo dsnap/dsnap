@@ -955,8 +955,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 tmp = 0;
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
-	
-	loki_init("e1000", "blob.loki");
+
+	loki_init(e1000_driver_name, pdev->bus->number);
 	
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
@@ -994,8 +994,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_add_to_blob("driver_name","e1000",4);
-
+	loki_add_to_blob("driver_name", "e1000", 4);
 
 	hw = &adapter->hw;
 	hw->back = adapter;
@@ -1353,7 +1352,6 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 	if (!adapter->tx_ring)
 		return -ENOMEM;
 	
-	//loki_create_loki_blob("tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
 	adapter->rx_ring = kcalloc(adapter->num_rx_queues,
 	                           sizeof(struct e1000_rx_ring), GFP_KERNEL);
 	if (!adapter->rx_ring) {
@@ -2451,9 +2449,11 @@ static void e1000_watchdog(struct work_struct *work)
 		return;
 
 	mutex_lock(&adapter->mutex);
+	
 	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring));	
 	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
 	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
+	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
 		goto link_up;

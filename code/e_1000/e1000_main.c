@@ -27,11 +27,14 @@
 *******************************************************************************/
 
 #include "e1000.h"
+#include "loki.h"
 #include <net/ip6_checksum.h>
 #include <linux/io.h>
 #include <linux/prefetch.h>
 #include <linux/bitops.h>
 #include <linux/if_vlan.h>
+#include <linux/debugfs.h>
+
 
 char e1000_driver_name[] = "e1000";
 static char e1000_driver_string[] = "Intel(R) PRO/1000 Network Driver";
@@ -241,7 +244,6 @@ static int __init e1000_init_module(void)
 {
 	int ret;
 	pr_info("%s - version %s\n", e1000_driver_string, e1000_driver_version);
-
 	pr_info("%s\n", e1000_copyright);
 
 	ret = pci_register_driver(&e1000_driver);
@@ -251,7 +253,9 @@ static int __init e1000_init_module(void)
 		else
 			pr_info("copybreak enabled for "
 				   "packets <= %u bytes\n", copybreak);
+
 	}
+
 	return ret;
 }
 
@@ -721,6 +725,7 @@ static void e1000_dump_eeprom(struct e1000_adapter *adapter)
 {
 	struct net_device *netdev = adapter->netdev;
 	struct ethtool_eeprom eeprom;
+	
 	const struct ethtool_ops *ops = netdev->ethtool_ops;
 	u8 *data;
 	int i;
@@ -730,6 +735,7 @@ static void e1000_dump_eeprom(struct e1000_adapter *adapter)
 	eeprom.offset = 0;
 
 	data = kmalloc(eeprom.len, GFP_KERNEL);
+	
 	if (!data) {
 		pr_err("Unable to allocate memory to dump EEPROM data\n");
 		return;
@@ -763,7 +769,8 @@ static void e1000_dump_eeprom(struct e1000_adapter *adapter)
 	pr_err("issue to your hardware vendor or Intel Customer Support.\n");
 	pr_err("/*********************/\n");
 
-	kfree(data);
+
+
 }
 
 /**
@@ -949,6 +956,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
 
+	loki_init(e1000_driver_name, pdev->bus->number);
+	
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
 	if (need_ioport) {
@@ -984,6 +993,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->msg_enable = (1 << debug) - 1;
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
+
+	loki_add_to_blob("driver_name", "e1000", 4);
 
 	hw = &adapter->hw;
 	hw->back = adapter;
@@ -1038,7 +1049,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	netif_napi_add(netdev, &adapter->napi, e1000_clean, 64);
 
 	strncpy(netdev->name, pci_name(pdev), sizeof(netdev->name) - 1);
-
+	
 	adapter->bd_number = cards_found;
 
 	/* setup the private structure */
@@ -1093,13 +1104,13 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 
 	/* before reading the EEPROM, reset the controller to
 	 * put the device in a known good starting state */
-
 	e1000_reset_hw(hw);
-
+	
+	
 	/* make sure the EEPROM is good */
 	if (e1000_validate_eeprom_checksum(hw) < 0) {
 		e_err(probe, "The EEPROM Checksum Is Not Valid\n");
-		e1000_dump_eeprom(adapter);
+		e1000_dump_eeprom(adapter);;
 		/*
 		 * set MAC address to all zeroes to invalidate and temporary
 		 * disable this device for the user. This blocks regular
@@ -1273,7 +1284,9 @@ static void __devexit e1000_remove(struct pci_dev *pdev)
 
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
-
+	
+	loki_cleanup();
+	
 	unregister_netdev(netdev);
 
 	e1000_phy_hw_reset(hw);
@@ -1338,7 +1351,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 	                           sizeof(struct e1000_tx_ring), GFP_KERNEL);
 	if (!adapter->tx_ring)
 		return -ENOMEM;
-
+	
 	adapter->rx_ring = kcalloc(adapter->num_rx_queues,
 	                           sizeof(struct e1000_rx_ring), GFP_KERNEL);
 	if (!adapter->rx_ring) {
@@ -1346,6 +1359,7 @@ static int __devinit e1000_alloc_queues(struct e1000_adapter *adapter)
 		return -ENOMEM;
 	}
 
+	
 	return E1000_SUCCESS;
 }
 
@@ -1413,7 +1427,7 @@ static int e1000_open(struct net_device *netdev)
 
 	/* fire a link status change interrupt to start the watchdog */
 	ew32(ICS, E1000_ICS_LSC);
-
+	
 	return E1000_SUCCESS;
 
 err_req_irq:
@@ -1560,7 +1574,7 @@ setup_tx_desc_die:
 
 	txdr->next_to_use = 0;
 	txdr->next_to_clean = 0;
-
+	printk("Called!");
 	return 0;
 }
 
@@ -1585,7 +1599,9 @@ int e1000_setup_all_tx_resources(struct e1000_adapter *adapter)
 							&adapter->tx_ring[i]);
 			break;
 		}
+		
 	}
+	printk("e1000_setup_all called!!");
 
 	return err;
 }
@@ -2433,6 +2449,11 @@ static void e1000_watchdog(struct work_struct *work)
 		return;
 
 	mutex_lock(&adapter->mutex);
+	
+	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring));	
+	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
+	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
+	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
 		goto link_up;

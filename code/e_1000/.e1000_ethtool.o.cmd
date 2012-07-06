@@ -1,9 +1,9 @@
-cmd_drivers/net/ethernet/intel/e1000/e1000_ethtool.o := gcc -Wp,-MD,drivers/net/ethernet/intel/e1000/.e1000_ethtool.o.d  -nostdinc -isystem /usr/lib/gcc/i686-pc-linux-gnu/4.7.0/include -I/root/linux-3.3.4/arch/x86/include -Iarch/x86/include/generated -Iinclude  -include /root/linux-3.3.4/include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -fno-delete-null-pointer-checks -O2 -m32 -msoft-float -mregparm=3 -freg-struct-return -mpreferred-stack-boundary=2 -march=i686 -mtune=generic -maccumulate-outgoing-args -Wa,-mtune=generic32 -ffreestanding -fstack-protector -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -Wframe-larger-than=1024 -Wno-unused-but-set-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -pg -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -DCC_HAVE_ASM_GOTO  -DMODULE  -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(e1000_ethtool)"  -D"KBUILD_MODNAME=KBUILD_STR(e1000)" -c -o drivers/net/ethernet/intel/e1000/.tmp_e1000_ethtool.o drivers/net/ethernet/intel/e1000/e1000_ethtool.c
+cmd_/root/Loki/code/e_1000/e1000_ethtool.o := gcc -Wp,-MD,/root/Loki/code/e_1000/.e1000_ethtool.o.d  -nostdinc -isystem /usr/lib/gcc/i686-pc-linux-gnu/4.7.0/include -I/root/linux-3.3.4/arch/x86/include -Iarch/x86/include/generated -Iinclude  -include /root/linux-3.3.4/include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -fno-delete-null-pointer-checks -O2 -m32 -msoft-float -mregparm=3 -freg-struct-return -mpreferred-stack-boundary=2 -march=i686 -mtune=generic -maccumulate-outgoing-args -Wa,-mtune=generic32 -ffreestanding -fstack-protector -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -Wframe-larger-than=1024 -Wno-unused-but-set-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -pg -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -DCC_HAVE_ASM_GOTO  -DMODULE  -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(e1000_ethtool)"  -D"KBUILD_MODNAME=KBUILD_STR(e1000)" -c -o /root/Loki/code/e_1000/.tmp_e1000_ethtool.o /root/Loki/code/e_1000/e1000_ethtool.c
 
-source_drivers/net/ethernet/intel/e1000/e1000_ethtool.o := drivers/net/ethernet/intel/e1000/e1000_ethtool.c
+source_/root/Loki/code/e_1000/e1000_ethtool.o := /root/Loki/code/e_1000/e1000_ethtool.c
 
-deps_drivers/net/ethernet/intel/e1000/e1000_ethtool.o := \
-  drivers/net/ethernet/intel/e1000/e1000.h \
+deps_/root/Loki/code/e_1000/e1000_ethtool.o := \
+  /root/Loki/code/e_1000/e1000.h \
   include/linux/stddef.h \
   include/linux/compiler.h \
     $(wildcard include/config/sparse/rcu/pointer.h) \
@@ -962,16 +962,16 @@ deps_drivers/net/ethernet/intel/e1000/e1000_ethtool.o := \
   /root/linux-3.3.4/arch/x86/include/asm/emergency-restart.h \
   include/linux/mii.h \
   include/linux/if_vlan.h \
-  drivers/net/ethernet/intel/e1000/e1000_hw.h \
+  /root/Loki/code/e_1000/e1000_hw.h \
     $(wildcard include/config/res.h) \
     $(wildcard include/config/fault.h) \
-  drivers/net/ethernet/intel/e1000/e1000_osdep.h \
+  /root/Loki/code/e_1000/e1000_osdep.h \
     $(wildcard include/config/ram/base.h) \
     $(wildcard include/config/offset.h) \
     $(wildcard include/config/base/virt.h) \
     $(wildcard include/config/flash/write.h) \
     $(wildcard include/config/flash/read.h) \
 
-drivers/net/ethernet/intel/e1000/e1000_ethtool.o: $(deps_drivers/net/ethernet/intel/e1000/e1000_ethtool.o)
+/root/Loki/code/e_1000/e1000_ethtool.o: $(deps_/root/Loki/code/e_1000/e1000_ethtool.o)
 
-$(deps_drivers/net/ethernet/intel/e1000/e1000_ethtool.o):
+$(deps_/root/Loki/code/e_1000/e1000_ethtool.o):

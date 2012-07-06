@@ -9,8 +9,11 @@
 
 //4 bytes for start and end + 4 bytes for records
 #define LOKI_START_SIZE  12 
+
 //// GLOBAL VARIABLES ////
+
 struct loki_dir *ldir = NULL;
+
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_loki_file(char *name);
@@ -24,8 +27,11 @@ static void loki_construct_blob(void);
  * Initializes the Loki framework.
  * @name: the name of the root directory in /debug
  */
-void loki_init(char *dir_name, char *file_name)
+void loki_init(char *dir_name, unsigned char bus_number)
 {
+	char *file_name;
+	int length;
+
 	// TODO: If ENODEV returned from create_dir call, debugfs not in kernel
 	printk("Loki: Initializing...\n");
 
@@ -40,6 +46,20 @@ void loki_init(char *dir_name, char *file_name)
 	if (!(ldir->entry = debugfs_create_dir(dir_name, NULL)))
 	{
 		printk("Loki: Unable to create Loki directory '%s'.\n", dir_name);
+		return;
+	}
+
+	if (!(file_name = kmalloc(1, GFP_KERNEL)))
+	{
+		printk("Loki: Unable to allocate memory for filename.\n");
+		return;
+	}
+
+	length = snprintf(file_name, sizeof(file_name), "%u", bus_number);
+
+	if (length == -1)
+	{
+		printk("Loki: Call to snprintf failed!\n");
 		return;
 	}
 
@@ -66,7 +86,6 @@ void loki_init(char *dir_name, char *file_name)
 	
 	//construct initial binary structure
 	loki_construct_blob();
-       
   
 	printk("Loki: Initialization complete.\n");
 }
@@ -114,6 +133,7 @@ static void  loki_construct_blob(void)
   
   
 }
+
 /**
  * Creates a Loki file.
  * @name: the name of the file to create
