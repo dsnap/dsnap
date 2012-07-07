@@ -20,7 +20,7 @@ http://bytebaker.com/2008/11/03/switch-case-statement-in-python/
 #blob = open("test.blob", 'rb')
 blob = open("/debug/e1000/blob.loki",'rb')
 #puts format check into blobIntro and item count into blobcount
-blobIntro,blobcount = unpack('II',blob.read(8))
+blobcount = unpack('I',blob.read(4))
 
 #Function from: code.activestate.com/recipes/142812-hex-dumper/
 #What it does is dumps the data contents in a pretty 3 column view
@@ -91,7 +91,5 @@ for item in dataItems:
 	print hexdump(item[2],16)+"\n"
 
 
-blobEnd, = unpack('I',blob.read(4))
-#print hex(blobEnd)
 blob.close()
 
