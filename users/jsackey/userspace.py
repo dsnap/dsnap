@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 # userspace.py - A rough draft implementation of the userspace tool in project Loki
 # A proof of concept/rough draft by John Sackey for Team 2.718
 
@@ -6,6 +5,8 @@
 from struct import *
 #in order to have command line args import sys
 import sys
+import pahole
+
 """
 Now command line parameters can be grabbed from sys.argv
 It is an array like in c so sys.argv[0] = script name
@@ -15,13 +16,25 @@ One possible way to make a switch statement:
 http://bytebaker.com/2008/11/03/switch-case-statement-in-python/
 	
 """
+# NOT SURE if we should leave a default blob location or not
+# but hey THERE IT IS
+# File obj named blob holds the test blob
+if len(sys.argv) < 2:
+	f = "/debug/e1000/blob.loki"
+else:
+	f = sys.argv[1]
 
-#File obj named blob holds the test blob
-#blob = open("test.blob", 'rb')
-blob = open("/debug/e1000/blob.loki",'rb')
+# Try to open the blob, give out some usefull error feedback
+try:
+	blob = open(f,'rb')
+except Exception as e:
+	print('Error opening the blob: %s' %e)
+	sys.exit(2)	
+		
+
 #puts format check into blobIntro and item count into blobcount
-blobcount = unpack('I',blob.read(4))
-
+blobcount, = unpack('I',blob.read(4))
+print(blobcount)
 #Function from: code.activestate.com/recipes/142812-hex-dumper/
 #What it does is dumps the data contents in a pretty 3 column view
 #and gives a nice starting point to create functions to only show hex
@@ -32,14 +45,11 @@ def hexdump(src, length=8):
     for i in xrange(0, len(src), length):
        s = src[i:i+length]
        hexa = b' '.join(["%0*X" % (digits, ord(x))  for x in s])
-       text = b''.join([x if 0x20 <= ord(x) < 0x7F else b'.'  for x in s])
-       result.append( b"%04X   %-*s   %s" % (i, length*(digits + 1), hexa, text) )
-    return b'\n'.join(result)
 
+       return hexa
 
 #making sure I unpacked things right/made the test file correctly
-print hex(blobIntro) #print format check in hex to see deadbeef!
-print blobcount
+#print blobcount
 
 #some tmp vars to hold pieces of each item
 name = ""
@@ -51,45 +61,52 @@ for i in range(blobcount):
 	#get the name and size of data from each item
 	name,itemSize = unpack("80s I", blob.read(80+4))
 	data = blob.read(itemSize)
-	dataItems.append( (name.split(b'\0',1)[0],itemSize,data))
+	dataItems.append( (name,itemSize,data))
 	
 #At this point dataItems is an array of tuples, and can be printed
 
 
-#As name/data pairs...	
-"""
-print "Name:      | Size: | Data: \n"
-i = 0
-for item in dataItems:
-	listtest = splitString(item[2],20)
-	liststr = "| "+listtest[0]+"\n"
-	liststr1 = ""
-	for x in range(1,len(listtest)):
-		liststr1 = liststr1 + "                   | "+listtest[x]+"\n"
-	print item[0] + "  | " + str(item[1]) + "    " + liststr + liststr1
-"""
-"""
-for item in dataItems:
-	print "name:"+item[0] +"\ndata:\n"+ item[2]
+
+
+def print_structs(name,data,level=0):
+	tabs = "\t" *level
+	map=pahole.get_map(name) 
+	if map:
+		print tabs+ "============"+name+"============"
+		for p in sorted(map.keys()):
+			t,name,size = map[p]
+			print tabs+"Name:"+ t+" "+name
+			print tabs+"Size:"+str(size)
+			print tabs+"Offset" +str(p)
+			if "struct" in t and "*" not in t:
+				print_structs(t.split("struct ")[1],data[p:p+size],level+1)
+			else:
+				print tabs+"Value:"+ hexdump(data[p:p+size],int(size))
+		return True
+	return False
+
+
 
 #As just a list of names
 for item in dataItems:
-	print "name:"+item[0]
+
+	name = item[0].split(b'\0',1)[0]
+	map=None
+	data = item[2]
+	dsize = item[1]
+	print "*" *80 
+	if not print_structs(name,data):
+		print "============"+name+"============"
+		print hexdump(item[2],16)+"\n"
 	
 #Just the raw data
-for item in dataItems:
-	print "Data:\n"+item[2]
-
-#or size
-for item in dataItems:
-	print "Data size of "+item[0]+": "+str(item[1])+" Bytes\n"
-"""
-
-print "OFFSET                         HEX                              ASCII\n"
-for item in dataItems:
-	print item[0],item[1]
-	print hexdump(item[2],16)+"\n"
 
 
-blob.close()
+
+
+# for item in dataItems:
+# 	
+
+
+# blob.close()
 
