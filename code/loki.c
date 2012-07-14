@@ -96,17 +96,17 @@ static void  loki_construct_blob(void)
 {
     struct loki_record *curr;
     struct loki_file *root = ldir->lfile;
-    u32 * dw_master = (u32 *)ldir->lfile->master;
-    u8  *c_ptr = root->master + sizeof(u32);
+    u8  *c_ptr = root->master;
     int i = 0;
     //zero buffer
     for (i=0; i<ldir->lfile->tot_size; i++)
         root->master[i] = 0;
 
-    dw_master[0] = strlen(ldir->name); // Should be module name
+    *c_ptr = strlen(ldir->name); // Should be module name
+    c_ptr +=sizeof(u32);
     memcpy(c_ptr,ldir->name, strlen(ldir->name));
     c_ptr += strlen(ldir->name); // Jump to count of records
-    *(c_ptr) = root->records;
+    *c_ptr = root->records;
     c_ptr += sizeof(u32); // Jump to first record
 
     curr = ldir->lfile->lblob; 
@@ -114,12 +114,14 @@ static void  loki_construct_blob(void)
     {
         if (strlen(curr->name) > 0xffffffff)
            return;
-
         *c_ptr = strlen(curr->name);
-        c_ptr += sizeof(u32); 
-        memcpy(c_ptr,curr->name,strlen(curr->name));
+        printk("NAME:%s,STRLEN:%x\n",curr->name,strlen(curr->name));
+	c_ptr += sizeof(u32); 
+	memcpy(c_ptr,curr->name,strlen(curr->name));
         c_ptr += strlen(curr->name); // Jump to count of records
-        memcpy(c_ptr,curr->loc,curr->size);
+        *c_ptr = curr->size;
+	c_ptr += sizeof(u32); 
+	memcpy(c_ptr,curr->loc,curr->size);
         c_ptr+=curr->size;
         curr = curr->next;
     }
