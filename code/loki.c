@@ -72,7 +72,7 @@ void loki_init(char *dir_name, unsigned char bus_number)
     }
     //set master size
     ldir->lfile->tot_size =   (sizeof(u32)*2) 
-                            + strlen(file_name); 
+                            + strlen(ldir->name); 
     //allocate memory for master
     if (!(ldir->lfile->master = (u8 *)kmalloc(ldir->lfile->tot_size, GFP_KERNEL)))
     {
@@ -193,7 +193,7 @@ static struct dentry *loki_create_record(char *name)
     }
 
     blob->data = NULL;
-    blob->size = sizeof(blob);
+    blob->size = 0;
 
     ldir->lfile->blob = blob;
 

@@ -994,7 +994,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
 
-	loki_add_to_blob("driver_name", "e1000", 4);
+	
 
 	hw = &adapter->hw;
 	hw->back = adapter;
