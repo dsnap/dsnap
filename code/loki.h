@@ -44,7 +44,7 @@ struct loki_record
 
 };
 
-extern void loki_init(char *dir_name, unsigned char bus_number);
+extern void loki_init(char *dir_name, unsigned int bdf_id);
 extern void loki_cleanup(void);
 extern void loki_add_to_blob(char *name, void *location, int size);
 

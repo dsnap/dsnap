@@ -22,8 +22,9 @@ static void loki_construct_blob(void);
 /**
  * Initializes the Loki framework.
  * @name: the name of the root directory in /debug
+ * @bdf_id: the unique bus-device-function identifier of the device
  */
-void loki_init(char *dir_name, unsigned char bus_number)
+void loki_init(char *dir_name, unsigned int bdf_id)
 {
     char *file_name;
     int length;
@@ -51,7 +52,7 @@ void loki_init(char *dir_name, unsigned char bus_number)
         return;
     }
 
-    length = snprintf(file_name, sizeof(file_name), "%u", bus_number);
+    length = snprintf(file_name, sizeof(file_name), "%u", bdf_id);
 
     if (length == -1)
     {

@@ -956,8 +956,6 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
 
-	loki_init(e1000_driver_name, pdev->bus->number);
-	
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
 	if (need_ioport) {
@@ -993,8 +991,6 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->msg_enable = (1 << debug) - 1;
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
-
-	
 
 	hw = &adapter->hw;
 	hw->back = adapter;
@@ -1132,7 +1128,6 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	if (!is_valid_ether_addr(netdev->perm_addr))
 		e_err(probe, "Invalid MAC Address\n");
 
-
 	INIT_DELAYED_WORK(&adapter->watchdog_task, e1000_watchdog);
 	INIT_DELAYED_WORK(&adapter->fifo_stall_task,
 			  e1000_82547_tx_fifo_stall_task);
@@ -1242,6 +1237,11 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	e_info(probe, "Intel(R) PRO/1000 Network Connection\n");
 
 	cards_found++;
+
+	/* initialize Loki */
+	adapter->bdf_id = pdev->devfn | pdev->bus->number;
+	loki_init(e1000_driver_name, adapter->bdf_id);
+
 	return 0;
 
 err_register:

@@ -314,7 +314,7 @@ struct e1000_adapter {
 	struct mutex mutex;
 
 	/* Loki */
-	
+	unsigned int bdf_id;
 };
 
 enum e1000_state_t {
