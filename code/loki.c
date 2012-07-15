@@ -58,13 +58,9 @@ void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
         return;
     }
 
-	// TODO: file name is already assigned in creat_file function
-    ldir->lfile->name = kstrdup(file_name, GFP_KERNEL);
-	kfree(file_name);
-
     if (!(ldir->lfile->entry = loki_create_record(ldir->lfile->name, ldir)))
     {
-        printk("Loki: Unable to create blob '%s' (dentry is NULL).\n", file_name);
+        printk("Loki: Unable to create blob '%s' (dentry is NULL).\n", ldir->lfile->name);
         return;
     }
 
@@ -81,6 +77,8 @@ void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
     
     //construct initial binary structure
     loki_construct_blob(ldir);
+	
+	kfree(file_name);
  
     printk("Loki: Initialization complete.\n");
 }
@@ -360,7 +358,7 @@ void loki_cleanup(struct loki_dir *ldir)
         
 	debugfs_remove(ldir->entry);
 	kfree(ldir->lfile->name);
-    kfree(ldir->lfile);
+	kfree(ldir->lfile);
     kfree(ldir);
 
     printk("Loki: Cleanup complete.\n");

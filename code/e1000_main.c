@@ -1282,11 +1282,11 @@ static void __devexit e1000_remove(struct pci_dev *pdev)
 	struct net_device *netdev = pci_get_drvdata(pdev);
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
+	
+	loki_cleanup(adapter->loki_dir);
 
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
-	
-	loki_cleanup(adapter->loki_dir);
 	
 	unregister_netdev(netdev);
 
