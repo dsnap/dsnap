@@ -26,7 +26,10 @@ except Exception as e:
 	sys.exit(2)	
 		
 #puts item count into blobcount the comma is because unpack returns tuple
-blobcount, = unpack('I',blob.read(4))
+
+namesize, = unpack("I", blob.read(4) )
+driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+
 
 #making sure I unpacked things right/made the test file correctly
 #print blobcount
