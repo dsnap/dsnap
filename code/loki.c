@@ -1,21 +1,13 @@
 #include "loki.h"
 #include "e1000.h"
 
-// TODO: Error checking
-
-//4 bytes for start and end + 4 bytes for records
-
-//// GLOBAL VARIABLES ////
-
-struct loki_dir *ldir = NULL;
-
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_file(char *name);
-static struct dentry *loki_create_record(char *name);
-static struct loki_record *loki_find_record(char *name);
-static int loki_create_blob(char *name, void *location, int size);
-static void loki_construct_blob(void);
+static struct dentry *loki_create_record(char *name, struct loki_dir *ldir);
+static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir);
+static int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir);
+static void loki_construct_blob(struct loki_dir *ldir);
 
 //// FUNCTIONS ////
 
@@ -24,7 +16,7 @@ static void loki_construct_blob(void);
  * @name: the name of the root directory in /debug
  * @bdf_id: the unique bus-device-function identifier of the device
  */
-void loki_init(char *dir_name, unsigned int bdf_id)
+void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
 {
     char *file_name;
     int length;
@@ -66,10 +58,11 @@ void loki_init(char *dir_name, unsigned int bdf_id)
         return;
     }
 
+	// TODO: file name is already assigned in creat_file function
     ldir->lfile->name = kstrdup(file_name, GFP_KERNEL);
 	kfree(file_name);
 
-    if (!(ldir->lfile->entry = loki_create_record(ldir->lfile->name)))
+    if (!(ldir->lfile->entry = loki_create_record(ldir->lfile->name, ldir)))
     {
         printk("Loki: Unable to create blob '%s' (dentry is NULL).\n", file_name);
         return;
@@ -87,7 +80,7 @@ void loki_init(char *dir_name, unsigned int bdf_id)
     //set debugfs blob to our master location
     
     //construct initial binary structure
-    loki_construct_blob();
+    loki_construct_blob(ldir);
  
     printk("Loki: Initialization complete.\n");
 }
@@ -97,7 +90,7 @@ void loki_init(char *dir_name, unsigned int bdf_id)
  * @name: the name of the file to create
  * @return: a pointer to the created file
  */
-static void  loki_construct_blob(void)
+static void loki_construct_blob(struct loki_dir *ldir)
 {
     struct loki_record *curr;
     struct loki_file *root = ldir->lfile;
@@ -161,8 +154,6 @@ static struct loki_file *loki_create_file(char *name)
     lfile->records = 0;
     lfile->tot_size = 0;
     
-    
- 
     return lfile;
 }
 
@@ -172,7 +163,7 @@ static struct loki_file *loki_create_file(char *name)
  * @return: a pointer to the dentry object returned by the
  *          debugfs_create_blob call
  */
-static struct dentry *loki_create_record(char *name)
+static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
 {
     struct debugfs_blob_wrapper *blob;
     struct dentry *entry;  
@@ -213,16 +204,16 @@ static struct dentry *loki_create_record(char *name)
  * @location: the memory location of the data to add
  * @size: the size of the data to add
  */
-void loki_add_to_blob(char *name, void *location, int size)
+void loki_add_to_blob(char *name, void *location, int size, struct loki_dir *ldir)
 {
     struct loki_record *lblob;
 #ifdef DEBUG
     printk("Loki: Adding '%s' to blob...\n", name);
 #endif
         //Data has not been added to blob yet, so add it
-    if (!(lblob = loki_find_record(name)))
+    if (!(lblob = loki_find_record(name, ldir)))
     {
-        if ((loki_create_blob(name, location, size)) == -1)
+        if ((loki_create_blob(name, location, size, ldir)) == -1)
         {
             printk("Loki: Unable to create Loki blob '%s'.\n", name);
             return;
@@ -255,7 +246,7 @@ void loki_add_to_blob(char *name, void *location, int size)
  * @size: the size of the data to store
  * @return: -1 if an error occurs; 0 otherwise
  */
-int loki_create_blob(char *name, void *location, int size)
+int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir)
 {
     struct loki_record *lblob,*curr;
 
@@ -306,7 +297,7 @@ int loki_create_blob(char *name, void *location, int size)
     ldir->lfile->records++;
     
     //reconstruct master blob format
-    loki_construct_blob();
+    loki_construct_blob(ldir);
     return 0;
 }
 
@@ -315,7 +306,7 @@ int loki_create_blob(char *name, void *location, int size)
  * @name: the name of the Loki blob to find
  * @return: a pointer to the Loki blob if found, else null
  */
-static struct loki_record *loki_find_record(char *name)
+static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir)
 {
     struct loki_record *curr;
 
@@ -345,7 +336,7 @@ static struct loki_record *loki_find_record(char *name)
 /**
  * Properly disposes of Loki resources.
  */
-void loki_cleanup(void)
+void loki_cleanup(struct loki_dir *ldir)
 {
   	struct loki_record *curr, *prev;
 

@@ -314,6 +314,7 @@ struct e1000_adapter {
 	struct mutex mutex;
 
 	/* Loki */
+	struct loki_dir *loki_dir;
 	unsigned int bdf_id;
 };
 

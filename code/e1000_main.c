@@ -1239,8 +1239,9 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	cards_found++;
 
 	/* initialize Loki */
+	adapter->loki_dir = NULL;
 	adapter->bdf_id = pdev->devfn | pdev->bus->number;
-	loki_init(e1000_driver_name, adapter->bdf_id);
+	loki_init(e1000_driver_name, adapter->loki_dir, adapter->bdf_id);
 
 	return 0;
 
@@ -1285,7 +1286,7 @@ static void __devexit e1000_remove(struct pci_dev *pdev)
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
 	
-	loki_cleanup();
+	loki_cleanup(adapter->loki_dir);
 	
 	unregister_netdev(netdev);
 
@@ -2450,9 +2451,9 @@ static void e1000_watchdog(struct work_struct *work)
 
 	mutex_lock(&adapter->mutex);
 	
-	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring));	
-	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
-	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
+	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring), adapter->loki_dir);	
+	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring), adapter->loki_dir);	
+	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter), adapter->loki_dir);	
 	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)
