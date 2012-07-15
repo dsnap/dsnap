@@ -1,5 +1,6 @@
 # userspace.py - A rough draft implementation of the userspace tool in project Loki
 # A proof of concept/rough draft by John Sackey for Team 2.718
+#last update July 14 2012
 
 #Used for handling binary data stored in files (specifically the blob)
 from struct import *
@@ -7,34 +8,51 @@ from struct import *
 import sys
 import pahole
 
-"""
-Now command line parameters can be grabbed from sys.argv
-It is an array like in c so sys.argv[0] = script name
-							sys.argv[1] = first arg
-							...etc
-One possible way to make a switch statement:
-http://bytebaker.com/2008/11/03/switch-case-statement-in-python/
-	
-"""
+# ============BEGIN READING BLOB============================
+
 # NOT SURE if we should leave a default blob location or not
 # but hey THERE IT IS
-# File obj named blob holds the test blob
+# if a file name isn't provided, open the default blob location
 if len(sys.argv) < 2:
 	f = "/debug/e1000/blob.loki"
 else:
 	f = sys.argv[1]
 
-# Try to open the blob, give out some usefull error feedback
+# Try to open the blob, hopefully useful error if it fails
 try:
 	blob = open(f,'rb')
 except Exception as e:
 	print('Error opening the blob: %s' %e)
 	sys.exit(2)	
 		
-
-#puts format check into blobIntro and item count into blobcount
+#puts item count into blobcount the comma is because unpack returns tuple
 blobcount, = unpack('I',blob.read(4))
-print(blobcount)
+
+#making sure I unpacked things right/made the test file correctly
+#print blobcount
+
+#some tmp vars to hold pieces of each item
+name = ""
+namesize = 0
+itemSize = 0
+dataItems = []
+
+#for each item in the blob add a tuple to dataitems
+for i in range(blobcount):
+	#get the size of name, the name, and size of data from each item
+	namesize, = unpack("I", blob.read(4) )
+	#name, = unpack(str(namesize)+"s", blob.read(namesize))
+	#itemSize, = unpack("I", blob.read(4))
+	name,itemSize = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+	print(name)
+	print(itemSize)
+	data = blob.read(itemSize)
+	dataItems.append( (name,itemSize,data))
+
+blob.close()
+#At this point dataItems is an array of tuples, and can be printed
+#=================== END READING BLOB ============================
+
 #Function from: code.activestate.com/recipes/142812-hex-dumper/
 #What it does is dumps the data contents in a pretty 3 column view
 #and gives a nice starting point to create functions to only show hex
@@ -47,25 +65,6 @@ def hexdump(src, length=8):
        hexa = b' '.join(["%0*X" % (digits, ord(x))  for x in s])
 
        return hexa
-
-#making sure I unpacked things right/made the test file correctly
-#print blobcount
-
-#some tmp vars to hold pieces of each item
-name = ""
-itemSize = 0
-dataItems = []
-
-#for each item in the blob add a tuple to dataitems
-for i in range(blobcount):
-	#get the name and size of data from each item
-	name,itemSize = unpack("80s I", blob.read(80+4))
-	data = blob.read(itemSize)
-	dataItems.append( (name,itemSize,data))
-	
-#At this point dataItems is an array of tuples, and can be printed
-
-
 
 
 def print_structs(name,data,level=0):
@@ -86,7 +85,6 @@ def print_structs(name,data,level=0):
 	return False
 
 
-
 #As just a list of names
 for item in dataItems:
 
@@ -99,14 +97,3 @@ for item in dataItems:
 		print "============"+name+"============"
 		print hexdump(item[2],16)+"\n"
 	
-#Just the raw data
-
-
-
-
-# for item in dataItems:
-# 	
-
-
-# blob.close()
-
