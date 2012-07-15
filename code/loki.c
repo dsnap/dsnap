@@ -66,11 +66,15 @@ void loki_init(char *dir_name, unsigned int bdf_id)
         return;
     }
 
-    if (!(ldir->lfile->entry = loki_create_record(file_name)))
+    ldir->lfile->name = kstrdup(file_name, GFP_KERNEL);
+	kfree(file_name);
+
+    if (!(ldir->lfile->entry = loki_create_record(ldir->lfile->name)))
     {
         printk("Loki: Unable to create blob '%s' (dentry is NULL).\n", file_name);
         return;
     }
+
     //set master size
     ldir->lfile->tot_size =   (sizeof(u32)*2) 
                             + strlen(ldir->name); 
@@ -84,7 +88,7 @@ void loki_init(char *dir_name, unsigned int bdf_id)
     
     //construct initial binary structure
     loki_construct_blob();
-  
+ 
     printk("Loki: Initialization complete.\n");
 }
 
@@ -343,18 +347,18 @@ static struct loki_record *loki_find_record(char *name)
  */
 void loki_cleanup(void)
 {
-    // TODO: This hasn't been done yet.  
-  struct loki_record *curr,*prev;
+  	struct loki_record *curr, *prev;
 
     printk("Loki: Cleaning up...\n");
-    //first free root name
-    kfree(ldir->name);
-
+    
+	kfree(ldir->name);
     debugfs_remove(ldir->lfile->entry);
-    //remove master blob
+    
+	// Remove master blob
     kfree(ldir->lfile->master);
-    curr = ldir->lfile->lblob;
-    //remove each llist name
+    
+    // Remove each llist name
+	curr = ldir->lfile->lblob;
     while (curr)
     {
         kfree(curr->name);
@@ -362,7 +366,11 @@ void loki_cleanup(void)
         curr = curr->next;
         kfree(prev);
     }
-        debugfs_remove(ldir->entry);
-        kfree(ldir->lfile);
-        kfree(ldir);
+        
+	debugfs_remove(ldir->entry);
+	kfree(ldir->lfile->name);
+    kfree(ldir->lfile);
+    kfree(ldir);
+
+    printk("Loki: Cleanup complete.\n");
 }
