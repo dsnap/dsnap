@@ -955,7 +955,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 tmp = 0;
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
-	char filename[1024];
+	char filename[512];
 
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
@@ -1240,9 +1240,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	cards_found++;
 	 
 	/* initialize Loki */
-	adapter->loki_dir = NULL;
-	printk("DEVFN:%08X\n",pdev->devfn);
-	snprintf(filename,1024,"%02X_%02X_%1X"
+	adapter->loki_dir = kmalloc(GFP_KERNEL,sizeof(struct loki_dir));
+	snprintf(filename,512,"%02X_%02X_%1X"
 		 ,pdev->bus->number
 		 ,PCI_SLOT(pdev->devfn) 
 		 ,PCI_FUNC(pdev->devfn));

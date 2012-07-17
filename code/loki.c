@@ -1,6 +1,5 @@
 #include "loki.h"
 #include "e1000.h"
-
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_file(char *name);
@@ -20,12 +19,6 @@ void loki_init(char *dir_name, struct loki_dir *ldir,char *file_name)
 {
     // TODO: If ENODEV returned from create_dir call, debugfs not in kernel
     printk("Loki: Initializing...\n");
-
-    if (!(ldir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL)))
-    {
-        printk("Loki: Unable to allocate memory for Loki directory '%s'.\n", dir_name);
-        return;
-    }
 
     ldir->name = kstrdup(dir_name, GFP_KERNEL);
     
@@ -92,7 +85,6 @@ static void loki_construct_blob(struct loki_dir *ldir)
         if (strlen(curr->name) > 0xffffffff)
            return;
         *((u32 *)c_ptr) = strlen(curr->name);
-        printk("NAME:%s,STRLEN:%x\n",curr->name,strlen(curr->name));
 	c_ptr += sizeof(u32); 
 	memcpy(c_ptr,curr->name,strlen(curr->name));
         c_ptr += strlen(curr->name); // Jump to count of records
@@ -340,7 +332,7 @@ void loki_cleanup(struct loki_dir *ldir)
 	debugfs_remove(ldir->entry);
 	kfree(ldir->lfile->name);
 	kfree(ldir->lfile);
-    kfree(ldir);
+	kfree(ldir);
 
     printk("Loki: Cleanup complete.\n");
 }
