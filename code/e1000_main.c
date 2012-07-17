@@ -955,6 +955,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 tmp = 0;
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
+	char filename[1024];
 
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
@@ -1237,11 +1238,16 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	e_info(probe, "Intel(R) PRO/1000 Network Connection\n");
 
 	cards_found++;
-
+	 
 	/* initialize Loki */
 	adapter->loki_dir = NULL;
-	adapter->bdf_id = pdev->devfn | pdev->bus->number;
-	loki_init(e1000_driver_name, adapter->loki_dir, adapter->bdf_id);
+	printk("DEVFN:%08X\n",pdev->devfn);
+	snprintf(filename,1024,"%02X_%02X_%1X"
+		 ,pdev->bus->number
+		 ,PCI_SLOT(pdev->devfn) 
+		 ,PCI_FUNC(pdev->devfn));
+
+	loki_init(e1000_driver_name, adapter->loki_dir,filename);
 
 	return 0;
 

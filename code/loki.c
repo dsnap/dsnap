@@ -16,11 +16,8 @@ static void loki_construct_blob(struct loki_dir *ldir);
  * @name: the name of the root directory in /debug
  * @bdf_id: the unique bus-device-function identifier of the device
  */
-void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
+void loki_init(char *dir_name, struct loki_dir *ldir,char *file_name)
 {
-    char *file_name;
-    int length;
-
     // TODO: If ENODEV returned from create_dir call, debugfs not in kernel
     printk("Loki: Initializing...\n");
 
@@ -35,20 +32,6 @@ void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
     if (!(ldir->entry = debugfs_create_dir(dir_name, NULL)))
     {
         printk("Loki: Unable to create Loki directory '%s'.\n", dir_name);
-        return;
-    }
-
-    if (!(file_name = kmalloc(1, GFP_KERNEL)))
-    {
-        printk("Loki: Unable to allocate memory for filename.\n");
-        return;
-    }
-
-    length = snprintf(file_name, sizeof(file_name), "%u", bdf_id);
-
-    if (length == -1)
-    {
-        printk("Loki: Call to snprintf failed!\n");
         return;
     }
 
@@ -77,9 +60,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, unsigned int bdf_id)
     
     //construct initial binary structure
     loki_construct_blob(ldir);
-	
-	kfree(file_name);
- 
+     
     printk("Loki: Initialization complete.\n");
 }
 
