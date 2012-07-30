@@ -1,3 +1,4 @@
+#include <linux/err.h>
 #include "loki.h"
 #include "e1000.h"
 //// PROTOTYPES ////
@@ -17,8 +18,6 @@ static void loki_construct_blob(struct loki_dir *ldir);
  */
 void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 {
-    // TODO: If ENODEV returned from create_dir call, debugfs not in kernel
-    
 	struct file *directory;
 
 	printk("Loki: Initializing...\n");
@@ -41,6 +40,11 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 			return;
 		}
     }
+
+	else if (ldir->entry == ERR_PTR(-ENODEV))
+	{
+		printk("Error: Your kernel must have debugfs support enabled to run Loki.\n");
+	}
 
     if (!(ldir->lfile = loki_create_file(file_name)))
     {
