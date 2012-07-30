@@ -15,17 +15,31 @@ static void loki_construct_blob(struct loki_dir *ldir);
  * @name: the name of the root directory in /debug
  * @bdf_id: the unique bus-device-function identifier of the device
  */
-void loki_init(char *dir_name, struct loki_dir *ldir,char *file_name)
+void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 {
     // TODO: If ENODEV returned from create_dir call, debugfs not in kernel
-    printk("Loki: Initializing...\n");
+    
+	struct file *directory;
+
+	printk("Loki: Initializing...\n");
 
     ldir->name = kstrdup(dir_name, GFP_KERNEL);
-    
-    if (!(ldir->entry = debugfs_create_dir(dir_name, NULL)))
+	ldir->entry = debugfs_create_dir(dir_name, NULL);
+
+    if (!ldir->entry)
     {
-        printk("Loki: Unable to create Loki directory '%s'.\n", dir_name);
-        return;
+        printk("Loki: Loki directory '%s' already exists.\n", dir_name);
+
+		directory = filp_open("/debug/e1000", O_APPEND, S_IRWXU);
+		ldir->entry = directory->f_dentry;
+
+		kfree(directory);
+
+		if (!ldir->entry)
+		{
+			printk("Loki: Could not open directory '%s'.\n", dir_name);
+			return;
+		}
     }
 
     if (!(ldir->lfile = loki_create_file(file_name)))
