@@ -15,7 +15,8 @@ static void loki_construct_blob(struct loki_dir *ldir);
 /**
  * Initializes the Loki framework.
  * @name: the name of the root directory in /debug
- * @bdf_id: the unique bus-device-function identifier of the device
+ * @ldir: the Loki directory to operate in
+ * @file_name: the name of the blob file
  */
 void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 {
@@ -77,8 +78,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 
 /**
  * Creates a Loki binary structure from lfiles.
- * @name: the name of the file to create
- * @return: a pointer to the created file
+ * @ldir: the Loki directory to operate in
  */
 static void loki_construct_blob(struct loki_dir *ldir)
 {
@@ -156,6 +156,7 @@ static struct loki_file *loki_create_file(char *name)
 /**
  * Creates a blob that holds driver data.
  * @name: the name of the blob
+ * @ldir: the Loki directory to operate in
  * @return: a pointer to the dentry object returned by the
  *          debugfs_create_blob call
  */
@@ -199,6 +200,7 @@ static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
  * @name: the name of the data to add
  * @location: the memory location of the data to add
  * @size: the size of the data to add
+ * @ldir: the Loki directory to operate in
  */
 void loki_add_to_blob(char *name, void *location, int size, struct loki_dir *ldir)
 {
@@ -245,7 +247,9 @@ void loki_add_to_blob(char *name, void *location, int size, struct loki_dir *ldi
  * @name: the name of the Loki blob
  * @location: the location of the data to store
  * @size: the size of the data to store
- * @return: -1 if an error occurs; 0 otherwise
+ * @ldir: the Loki directory to operate in
+ * @return: -1 if an error occurs
+ *			 0 otherwise
  */
 int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir)
 {
@@ -312,6 +316,7 @@ int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir
 /**
  * Finds a specified Loki blob.
  * @name: the name of the Loki blob to find
+ * @ldir: the Loki directory to operate in
  * @return: a pointer to the Loki blob if found, else null
  */
 static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir)
@@ -345,6 +350,7 @@ static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir)
 
 /**
  * Properly disposes of Loki resources.
+ * @ldir: the Loki directory to operate in
  */
 void loki_cleanup(struct loki_dir *ldir)
 {
