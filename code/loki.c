@@ -2,6 +2,8 @@
 #include "loki.h"
 #include "e1000.h"
 
+// TODO: Determine which print statements should be wrapped in ifdefs
+
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_file(char *name);
@@ -31,6 +33,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
     {
         printk("Loki: Loki directory '%s' already exists.\n", dir_name);
 
+		// TODO: What if debugfs is mounted somewhere other than /debug?
 		directory = filp_open("/debug/e1000", O_APPEND, S_IRWXU);
 		ldir->entry = directory->f_dentry;
 
