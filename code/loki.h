@@ -35,11 +35,10 @@ struct loki_file
  */
 struct loki_record
 {
-	// TODO: Should we be using u16 instead of int here?
 	char *name;
 	int offset;			// index of starting location in master blob
 	int size;			// index of ending location in master blob
- 	void * loc;
+ 	void *loc;
 	struct loki_record *next;
 
 };

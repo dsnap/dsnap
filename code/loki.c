@@ -2,8 +2,6 @@
 #include "loki.h"
 #include "e1000.h"
 
-// TODO: Determine which print statements should be wrapped in ifdefs
-
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_file(char *name);
@@ -31,8 +29,6 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 
     if (!ldir->entry)
     {
-        printk("Loki: Loki directory '%s' already exists.\n", dir_name);
-
 		// TODO: What if debugfs is mounted somewhere other than /debug?
 		directory = filp_open("/debug/e1000", O_APPEND, S_IRWXU);
 		ldir->entry = directory->f_dentry;
@@ -48,7 +44,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 
 	else if (ldir->entry == ERR_PTR(-ENODEV))
 	{
-		printk("Error: Your kernel must have debugfs support enabled to run Loki.\n");
+		printk("Loki: Your kernel must have debugfs support enabled to run Loki.\n");
 	}
 
     if (!(ldir->lfile = loki_create_file(file_name)))
@@ -136,8 +132,6 @@ static void loki_construct_blob(struct loki_dir *ldir)
 static struct loki_file *loki_create_file(char *name)
 {
     struct loki_file *lfile;
-
-    printk("Loki: Creating Loki file '%s'...\n", name);
     
     if (!(lfile = kmalloc(sizeof(struct loki_file), GFP_KERNEL)))
     {
@@ -167,8 +161,6 @@ static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
 {
     struct debugfs_blob_wrapper *blob;
     struct dentry *entry;  
-
-    printk("Loki: Creating blob '%s'...\n", name);
     
     if (!(blob = kmalloc(sizeof(struct debugfs_blob_wrapper), GFP_KERNEL)))
     {
@@ -193,8 +185,6 @@ static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
 
     ldir->lfile->blob = blob;
 
-    printk("Loki: Blob '%s' created.\n", name);
-
     return entry;
 }
 
@@ -209,10 +199,6 @@ void loki_add_to_blob(char *name, void *location, int size, struct loki_dir *ldi
 {
     struct loki_record *lblob;
 
-#ifdef DEBUG
-    printk("Loki: Adding '%s' to blob...\n", name);
-#endif
-
  	// Data has not been added to blob yet, so add it
     if (!(lblob = loki_find_record(name, ldir)))
     {
@@ -226,22 +212,14 @@ void loki_add_to_blob(char *name, void *location, int size, struct loki_dir *ldi
     // Data exists in blob, so update it
     else
     {
-#ifdef DEBUG
-        printk("Loki: Updating Loki blob '%s'...\n", name);
-#endif
-
         if (size != lblob->size)
         {
-            printk("Loki: FAIL passed in size != to size in list");
+            printk("Loki: Passed in size not equal to size in list\n.");
             return;
         }
         
 		// Copy data to offset in blob
         memcpy(ldir->lfile->master + lblob->offset, location, size);
-
-#ifdef DEBUG
-        printk("Loki: Loki blob '%s' updated.\n", name);
-#endif
     }
 }
 
@@ -262,8 +240,6 @@ int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir
                    + ldir->lfile->tot_size
                    + strlen(name) 
                    + (sizeof(u32) * 2); 	// Size and count
-
-    printk("Loki: Creating Loki blob '%s'...\n", name);
     
     if (!(lblob = kmalloc(sizeof(struct loki_record), GFP_KERNEL)))
     {
@@ -295,9 +271,6 @@ int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir
     }
 
     lblob->next = NULL;
-       
-    printk("Loki: Loki blob '%s' created.\n", name);
-    printk("Loki: Adding new Loki blob '%s' to master blob.\n", name);
 
     // Expand master blob to accomodate new data
     if (!(ldir->lfile->master = krealloc(ldir->lfile->master,new_size, GFP_KERNEL)))
@@ -326,27 +299,17 @@ static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir)
 {
     struct loki_record *curr;
 
-#ifdef DEBUG    
-    printk("Loki: Searching for Loki blob '%s'...\n", name);
-#endif
-
     curr = ldir->lfile->lblob;
     
 	while (curr != NULL)
     { 
     	if ((strcmp(name, curr->name)) == 0)
         {
-#ifdef DEBUG
-            printk("Loki: Loki blob '%s' found.\n", name);
-#endif
-
             return curr;
         }
 
         curr = curr->next;
     }
-
-    printk("Loki: Loki blob '%s' not found.\n", name);  
 
     return NULL;
 }
