@@ -26,7 +26,7 @@ def get_class(arg):
 
 def run_pahole(args=[]):
     #list of args passed in
-    args =["/root/pahole/build/pahole"]+args+["e1000.ko"]
+    args =["pahole"]+args+["e1000.ko"]
     
     val=sp.check_output(args)
     return val
