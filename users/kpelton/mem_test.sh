@@ -21,6 +21,8 @@ do
 	insmod e1000.ko
 	for i in "${ETH[@]}"
 	do
+		#let debugfs allocate some memory
+		cat /debug/e1000/* >/dev/null
 		ifconfig $i up
 	done
 	sleep 1	
