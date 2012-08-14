@@ -33,7 +33,6 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 		directory = filp_open("/debug/e1000", O_APPEND, S_IRWXU);
 		ldir->entry = directory->f_dentry;
 
-		kfree(directory);
 
 		if (!ldir->entry)
 		{
