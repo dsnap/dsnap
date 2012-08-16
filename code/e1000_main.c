@@ -1246,7 +1246,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 		 ,PCI_SLOT(pdev->devfn) 
 		 ,PCI_FUNC(pdev->devfn));
 
-	loki_init(e1000_driver_name, adapter->loki_dir,filename);
+	loki_init(e1000_driver_name, adapter->loki_dir, filename, "/debug");
 
 	return 0;
 

@@ -9,6 +9,7 @@ static struct dentry *loki_create_record(char *name, struct loki_dir *ldir);
 static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir);
 static int loki_create_blob(char *name, void *location, int size, struct loki_dir *ldir);
 static void loki_construct_blob(struct loki_dir *ldir);
+static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name);
 
 //// FUNCTIONS ////
 
@@ -18,7 +19,7 @@ static void loki_construct_blob(struct loki_dir *ldir);
  * @ldir: the Loki directory to operate in
  * @file_name: the name of the blob file
  */
-void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
+void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *debugfs_root)
 {
 	struct file *directory;
 
@@ -26,13 +27,19 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name)
 
     ldir->name = kstrdup(dir_name, GFP_KERNEL);
 	ldir->entry = debugfs_create_dir(dir_name, NULL);
+	ldir->path = loki_set_debugfs_root(debugfs_root, dir_name);
+
+	if (!ldir->path)
+	{
+		return;
+	}
 
     if (!ldir->entry)
     {
-		// TODO: What if debugfs is mounted somewhere other than /debug?
-		directory = filp_open("/debug/e1000", O_APPEND, S_IRWXU);
+		directory = filp_open(ldir->path, O_APPEND, S_IRWXU);
 		ldir->entry = directory->f_dentry;
 
+		filp_close(directory, NULL);
 
 		if (!ldir->entry)
 		{
@@ -324,6 +331,7 @@ void loki_cleanup(struct loki_dir *ldir)
     printk("Loki: Cleaning up...\n");
     
 	kfree(ldir->name);
+	kfree(ldir->path);
     debugfs_remove(ldir->lfile->entry);
     
 	// Remove master blob
@@ -346,4 +354,27 @@ void loki_cleanup(struct loki_dir *ldir)
 	kfree(ldir);
 
     printk("Loki: Cleanup complete.\n");
+}
+
+/**
+ * Stores the path name of the debugfs root directory.
+ * @debugfs_root: the path to the debugfs root directory
+ * @dir_name: the name of the device directory
+ */
+static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name)
+{
+	int length = strlen(debugfs_root) + strlen(dir_name) + 1 + 1;
+	char *path = kmalloc(length, GFP_KERNEL);
+
+	if (!debugfs_root)
+	{
+		printk("Loki: FAIL! Invalid debugfs root directory.\n");
+		return NULL;
+	}
+
+	strcpy(path, debugfs_root);
+	strcat(path, "/");
+	strcat(path, dir_name);
+
+	return path;
 }
