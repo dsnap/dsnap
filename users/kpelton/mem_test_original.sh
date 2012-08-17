@@ -16,14 +16,12 @@ do
 	if [ $? -eq 0 ]; then 
 		rmmod e1000
 	fi
-	insmod $MOD_LOC	
+	modprobe e1000
 	ETH=( `ifconfig -a | egrep "eth[[:digit:]][[:digit:]]?" |sed s/:.*$//` )
-	j=1
 	for i in "${ETH[@]}"
-	do	
+	do
 		#let debugfs allocate some memory
-		ifconfig $i 192.168.0.$j
-		j=$[j+1]
+		ifconfig $i up
 	done
 done
 
