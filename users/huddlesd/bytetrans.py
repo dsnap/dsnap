@@ -81,6 +81,47 @@ def unsigned_char_translator(rawValue):
 addTranslator("unsigned char", unsigned_char_translator)
 
 
+## Translator for short int type.
+##
+def short_int_translator(rawValue):
+
+	return str(struct.unpack('=h', rawValue)[0])
+
+addTranslator("short int", short_int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("short", short_int_translator)
+addTranslator("signed short", short_int_translator)
+addTranslator("signed short int", short_int_translator)
+
+
+## Translator for unsigned short int type.
+##
+def unsigned_short_int_translator(rawValue):
+
+	return str(struct.unpack('=H', rawValue)[0])
+
+addTranslator("unsigned short int", unsigned_short_int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("unsigned short", unsigned_short_int_translator)
+
+
+## Translator for int type.
+##
+def int_translator(rawValue):
+
+	return str(struct.unpack('=i', rawValue)[0])
+
+addTranslator("int", int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("signed int", int_translator)
+
+
 ## Translator for unsigned int type.
 ##
 def unsigned_int_translator(rawValue):
@@ -88,3 +129,7 @@ def unsigned_int_translator(rawValue):
 	return str(struct.unpack('=I', rawValue)[0])
 
 addTranslator("unsigned int", unsigned_int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("unsigned", unsigned_int_translator)
