@@ -205,7 +205,8 @@ def addTranslator(typeString, translator):
 ##
 def defaultTranslator(rawValue):
 
-	return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
+#	return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
+	return ''.join(["%02X " % ord(x) for x in reversed(rawValue)].strip()
 
 
 ## Type-specific defintions.
