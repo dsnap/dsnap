@@ -52,7 +52,7 @@ def defaultTranslator(rawValue):
 ## Type-specific defintions.
 ## -------------------------
 ##
-
+'''
 
 ## Translator function for char type.
 ##
@@ -133,3 +133,32 @@ addTranslator("unsigned int", unsigned_int_translator)
 ## Associate translator with equivilant type ids.
 ##
 addTranslator("unsigned", unsigned_int_translator)
+
+
+## Translator for long int type.
+##
+def long_int_translator(rawValue):
+
+	return str(struct.unpack('=l', rawValue)[0])
+
+addTranslator("long int", long_int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("long", long_int_translator)
+addTranslator("signed long", long_int_translator)
+addTranslator("signed long int", long_int_translator)
+
+
+## Translator for unsigned long int type.
+##
+def unsigned_long_int_translator(rawValue):
+
+	return str(struct.unpack('=L', rawValue)[0])
+
+addTranslator("unsigned long int", unsigned_long_int_translator)
+
+## Associate translator with equivilant type ids.
+##
+addTranslator("unsigned long", unsigned_long_int_translator)
+'''
