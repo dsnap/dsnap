@@ -21,9 +21,10 @@ static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name);
 
 /**
  * Initializes the Loki framework.
- * @name: the name of the root directory in /debug
+ * @dir_name: the name of the debugfs root directory
  * @ldir: the Loki directory to operate in
  * @file_name: the name of the blob file
+ * @debugfs_root: the path to the debugfs root directory
  */
 void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name,
 		char *debugfs_root)
