@@ -4,8 +4,8 @@
 
 /* GLOBAL VARIABLES */
 
-const int magic_number = 0x696b6f4c;	/* "Loki" in ASCII */
-const u8 version = 1;
+static const int magic_number = 0x696b6f4c;	/* "Loki" in ASCII */
+static const u8 version = 1;
 
 /* PROTOTYPES */
 
@@ -142,8 +142,6 @@ static void loki_construct_blob(struct loki_dir *ldir)
 		*((u32 *)c_ptr) = curr->size;
 		c_ptr += sizeof(u32);
 
-		memcpy(c_ptr, curr->loc, curr->size);
-		c_ptr += curr->size;
 		curr = curr->next;
 	}
 
@@ -287,7 +285,6 @@ int loki_create_blob(char *name, void *location, int size,
 	lblob->name = kstrdup(name, GFP_KERNEL);
 	lblob->offset = new_size - size;    /* Size of record - size of data */
 	lblob->size = size;                 /* Size of data (in bytes) */
-	lblob->loc = location;              /* Address in kernel memory */
 
 	/* Add new Loki blob to the list */
 	if (!ldir->lfile->lblob) {
