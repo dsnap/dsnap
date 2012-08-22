@@ -5,7 +5,6 @@ from struct import * #lets me use unpack instead of struct.unpack
 import pahole
 import re #regular expression support, gives us simple search
 import argparse #this gives a nice way to parse arguments
-#import bytetrans
 
 theData = [] #a global to hold all the data
 
@@ -136,11 +135,6 @@ def printItem(item):
 		print tabs+"Size: "+str(size)
 		
 		print tabs+"Offset: "+str(offset)
-			
-#		if not data:
-#			pass
-#		else:
-#			print tabs+"Value: "+translate(t, data)
 
 		if data:
 
@@ -170,7 +164,6 @@ def printItem(item):
 				##
 				numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
 				elementSize = size / numElements
-				print "Element size: " + str(elementSize)
 
 				## Attempt to translate each array element.
 				##
@@ -204,6 +197,7 @@ def nameSearch(arg):
 			if not item[2]:
 				printItem(theData[i+1])
 	print "Found "+str(found)+" items"
+
 
 ## Provides modular implementation of type specific tranlations from binary
 ## format to readable format.
@@ -247,8 +241,15 @@ def addTranslator(typeString, translator):
 ##
 def defaultTranslator(rawValue):
 
-#	return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
-	return ''.join(["%02X " % ord(x) for x in reversed(rawValue)]).strip()
+	## Returns value in hex format: "AA BB CC DD EE FF ...".
+	##
+	#return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
+
+	## Returns value in hex format: "0xAABBCCDDEEFF...".
+	## This line also flips byte code:
+	## little-endian to big-endian, and little-endian to big-endian.
+	##
+	return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
 
 
 ## Type-specific defintions.
@@ -407,6 +408,7 @@ def u64_translator(rawValue):
 	return str(unpack('=Q', rawValue)[0])
 
 addTranslator("u64", u64_translator)
+
 
 #==================================RUN SOMETHING========================
 driver_name, dataItems = readBlob()
