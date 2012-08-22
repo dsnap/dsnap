@@ -1241,10 +1241,10 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	 
 	/* initialize Loki */
 	adapter->loki_dir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL);
-	snprintf(filename,512,"%02X_%02X_%1X"
-		 ,pdev->bus->number
-		 ,PCI_SLOT(pdev->devfn) 
-		 ,PCI_FUNC(pdev->devfn));
+	snprintf(filename, 512, "%02X_%02X_%1X",
+		pdev->bus->number,
+		PCI_SLOT(pdev->devfn),
+		PCI_FUNC(pdev->devfn));
 
 	loki_init(e1000_driver_name, adapter->loki_dir, filename, "/debug");
 
