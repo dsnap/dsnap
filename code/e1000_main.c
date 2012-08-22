@@ -1240,7 +1240,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	cards_found++;
 	 
 	/* initialize Loki */
-	adapter->loki_dir = kmalloc(GFP_KERNEL,sizeof(struct loki_dir));
+	adapter->loki_dir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL);
 	snprintf(filename,512,"%02X_%02X_%1X"
 		 ,pdev->bus->number
 		 ,PCI_SLOT(pdev->devfn) 

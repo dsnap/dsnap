@@ -39,8 +39,8 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *deb
 		return;
 	}
 
-    if (!ldir->entry)
-    {
+    	if (!ldir->entry)
+    	{
 		directory = filp_open(ldir->path, O_APPEND, S_IRWXU);
 		ldir->entry = directory->f_dentry;
 
