@@ -137,10 +137,57 @@ def printItem(item):
 		
 		print tabs+"Offset: "+str(offset)
 			
-		if not data:
-			pass
-		else:
-			print tabs+"Value: "+translate(t, data)
+#		if not data:
+#			pass
+#		else:
+#			print tabs+"Value: "+translate(t, data)
+
+		if data:
+
+			## Print data in a more readable format.
+			## -------------------------------------
+			##
+
+			## Add label to output string.
+			##
+			translatedData = tabs + "Value: "
+
+			## Find all array dimension size values, if any.
+			##
+			dimensionSizes = re.findall("\[([0-9]+)\]", name)
+
+			## (if 'data' represents an array)
+			##
+			if dimensionSizes:
+
+				## Handles multi-dimensional arrays.
+				##
+				## This is a bit of python's functional programming -
+				## the lambda function will perform multiplication
+				## on successive pairs in the list of array dimension
+				## sizes, which gives us the product of all elements
+				## in the list.
+				##
+				numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+				elementSize = size / numElements
+				print "Element size: " + str(elementSize)
+
+				## Attempt to translate each array element.
+				##
+				for x in xrange(numElements):
+
+					translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)])
+					translatedData += ' '
+
+			## (if 'data' does not represent an array)
+			##
+			else:
+
+				translatedData += translate(t, data)
+
+			## Print final result.
+			##
+			print translatedData
 
 #======================SEARCH FUNCTIONS=================================
 def nameSearch(arg):
@@ -165,11 +212,6 @@ def nameSearch(arg):
 ## 8/20/2012
 ## Last modified: 8/21/2012
 ##
-
-
-## Import required modules.
-##
-import struct
 
 
 ## Declare global objects.
@@ -212,13 +254,13 @@ def defaultTranslator(rawValue):
 ## Type-specific defintions.
 ## -------------------------
 ##
-'''
+
 
 ## Translator function for char type.
 ##
 def char_translator(rawValue):
 
-	return str(struct.unpack('=c', rawValue)[0])
+	return str(unpack('@c', rawValue)[0])
 
 addTranslator("char", char_translator)
 
@@ -227,7 +269,7 @@ addTranslator("char", char_translator)
 ##
 def signed_char_translator(rawValue):
 
-	return str(struct.unpack('=b', rawValue)[0])
+	return str(unpack('@b', rawValue)[0])
 
 addTranslator("signed char", signed_char_translator)
 
@@ -236,7 +278,7 @@ addTranslator("signed char", signed_char_translator)
 ##
 def unsigned_char_translator(rawValue):
 
-	return str(struct.unpack('=B', rawValue)[0])
+	return str(unpack('@B', rawValue)[0])
 
 addTranslator("unsigned char", unsigned_char_translator)
 
@@ -245,83 +287,126 @@ addTranslator("unsigned char", unsigned_char_translator)
 ##
 def short_int_translator(rawValue):
 
-	return str(struct.unpack('=h', rawValue)[0])
+	return str(unpack('@h', rawValue)[0])
 
 addTranslator("short int", short_int_translator)
 
-## Associate translator with equivilant type ids.
+
+## Translator for short unsigned int type.
 ##
-addTranslator("short", short_int_translator)
-addTranslator("signed short", short_int_translator)
-addTranslator("signed short int", short_int_translator)
+def short_unsigned_int_translator(rawValue):
 
+	return str(unpack('@H', rawValue)[0])
 
-## Translator for unsigned short int type.
-##
-def unsigned_short_int_translator(rawValue):
-
-	return str(struct.unpack('=H', rawValue)[0])
-
-addTranslator("unsigned short int", unsigned_short_int_translator)
-
-## Associate translator with equivilant type ids.
-##
-addTranslator("unsigned short", unsigned_short_int_translator)
+addTranslator("short unsigned int", short_unsigned_int_translator)
 
 
 ## Translator for int type.
 ##
 def int_translator(rawValue):
 
-	return str(struct.unpack('=i', rawValue)[0])
+	return str(unpack('@i', rawValue)[0])
 
 addTranslator("int", int_translator)
-
-## Associate translator with equivilant type ids.
-##
-addTranslator("signed int", int_translator)
 
 
 ## Translator for unsigned int type.
 ##
 def unsigned_int_translator(rawValue):
 
-	return str(struct.unpack('=I', rawValue)[0])
+	return str(unpack('@I', rawValue)[0])
 
 addTranslator("unsigned int", unsigned_int_translator)
-
-## Associate translator with equivilant type ids.
-##
-addTranslator("unsigned", unsigned_int_translator)
 
 
 ## Translator for long int type.
 ##
 def long_int_translator(rawValue):
 
-	return str(struct.unpack('=l', rawValue)[0])
+	return str(unpack('@l', rawValue)[0])
 
 addTranslator("long int", long_int_translator)
 
-## Associate translator with equivilant type ids.
+
+## Translator for long unsigned int type.
 ##
-addTranslator("long", long_int_translator)
-addTranslator("signed long", long_int_translator)
-addTranslator("signed long int", long_int_translator)
+def long_unsigned_int_translator(rawValue):
+
+	return str(unpack('@L', rawValue)[0])
+
+addTranslator("long unsigned int", long_unsigned_int_translator)
 
 
-## Translator for unsigned long int type.
+## Translator for long long int type.
 ##
-def unsigned_long_int_translator(rawValue):
+def long_long_int_translator(rawValue):
 
-	return str(struct.unpack('=L', rawValue)[0])
+	return str(unpack('@q', rawValue)[0])
 
-addTranslator("unsigned long int", unsigned_long_int_translator)
+addTranslator("long long int", long_long_int_translator)
 
-## Associate translator with equivilant type ids.
+
+## Translator for long long unsigned int type.
 ##
-addTranslator("unsigned long", unsigned_long_int_translator)
-'''
+def long_long_unsigned_int_translator(rawValue):
+
+	return str(unpack('@Q', rawValue)[0])
+
+addTranslator("long long unsigned int", long_long_unsigned_int_translator)
+
+
+## Translator for float type.
+##
+def float_translator(rawValue):
+
+	return str(unpack('@f', rawValue)[0])
+
+addTranslator("float", float_translator)
+
+
+## Translator for double type.
+##
+def double_translator(rawValue):
+
+	return str(unpack('@d', rawValue)[0])
+
+addTranslator("double", double_translator)
+
+
+## Translator for u8 type (unsigned byte value).
+##
+def u8_translator(rawValue):
+
+	return str(unpack('=B', rawValue)[0])
+
+addTranslator("u8", u8_translator)
+
+
+## Translator for u16 type (unsigned 16-bit value).
+##
+def u16_translator(rawValue):
+
+	return str(unpack('=H', rawValue)[0])
+
+addTranslator("u16", u16_translator)
+
+
+## Translator for u32 type (unsigned 32-bit value).
+##
+def u32_translator(rawValue):
+
+	return str(unpack('=L', rawValue)[0])
+
+addTranslator("u32", u32_translator)
+
+
+## Translator for u64 type (unsigned 64-bit value).
+##
+def u64_translator(rawValue):
+
+	return str(unpack('=Q', rawValue)[0])
+
+addTranslator("u64", u64_translator)
 
 #==================================RUN SOMETHING========================
 driver_name, dataItems = readBlob()
