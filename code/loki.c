@@ -270,7 +270,6 @@ int loki_create_blob(char *name, void *location, int size,
 {
 	struct loki_record *lblob, *curr;
 
-	/* TODO: Add version and magic number here */
 	int new_size = size +
 			ldir->lfile->tot_size +
 			strlen(name) +
