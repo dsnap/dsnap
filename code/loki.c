@@ -2,6 +2,11 @@
 #include "loki.h"
 #include "e1000.h"
 
+//// GLOBAL VARIABLES ////
+
+const int magic_number = 0x696b6f4c;	// "Loki" in ASCII
+const u8 version = 1;
+
 //// PROTOTYPES ////
 
 static struct loki_file *loki_create_file(char *name);
@@ -25,7 +30,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *deb
 
 	printk("Loki: Initializing...\n");
 
-    ldir->name = kstrdup(dir_name, GFP_KERNEL);
+    	ldir->name = kstrdup(dir_name, GFP_KERNEL);
 	ldir->entry = debugfs_create_dir(dir_name, NULL);
 	ldir->path = loki_set_debugfs_root(debugfs_root, dir_name);
 
@@ -55,7 +60,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *deb
 
     if (!(ldir->lfile = loki_create_file(file_name)))
     {
-        printk("Loki: Unable to create Loki file '%s'.\n", file_name);
+      printk("Loki: Unable to create Loki file '%s'.\n", file_name);
         return;
     }
 
@@ -66,7 +71,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *deb
     }
 
     // Set master size
-    ldir->lfile->tot_size = (sizeof(u32)*2) + strlen(ldir->name); 
+    ldir->lfile->tot_size = (sizeof(u32) * 2) + strlen(ldir->name) + sizeof(magic_number) + sizeof(version); 
     
 	// Allocate memory for master
     if (!(ldir->lfile->master = (u8 *)kmalloc(ldir->lfile->tot_size, GFP_KERNEL)))
@@ -87,47 +92,61 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name, char *deb
  */
 static void loki_construct_blob(struct loki_dir *ldir)
 {
-    struct loki_record *curr;
-    struct loki_file *root = ldir->lfile;
-    u8  *c_ptr = root->master;
-    int i = 0;
+    	struct loki_record *curr;
+    	struct loki_file *root = ldir->lfile;
+    	u8 *c_ptr = root->master;
+    	int i = 0;
     
 	// Zero buffer
-    for (i = 0; i < ldir->lfile->tot_size; i++)
-    {
-	    root->master[i] = 0;
+    	for (i = 0; i < ldir->lfile->tot_size; i++)
+    	{
+	    	root->master[i] = 0;
 	}
+    
+	*((u32 *)c_ptr) = sizeof(magic_number);	// Start with magic number
+	c_ptr += sizeof(magic_number);
+	memcpy(c_ptr, &magic_number, sizeof(magic_number));
+	c_ptr += sizeof(magic_number);		// Jump to version number
 
-    *((u32 *)c_ptr) = strlen(ldir->name); 	// Should be module name
-    c_ptr += sizeof(u32);
-    memcpy(c_ptr,ldir->name, strlen(ldir->name));
-    c_ptr += strlen(ldir->name); 			// Jump to count of records
-    *((u32 *)c_ptr) = root->records;
-    c_ptr += sizeof(u32); 					// Jump to first record
+	*((u32 *)c_ptr) = sizeof(version);
+	c_ptr += sizeof(version);
+	memcpy(c_ptr, &version, sizeof(version));
+	c_ptr += sizeof(version);		// Jump to module name
 
-    curr = ldir->lfile->lblob; 
+    	*((u32 *)c_ptr) = strlen(ldir->name);
+    	c_ptr += sizeof(u32);
+	memcpy(c_ptr, ldir->name, strlen(ldir->name));
+    	c_ptr += strlen(ldir->name); 		// Jump to count of record
+	
+	*((u32 *)c_ptr) = root->records;
+    	c_ptr += sizeof(u32); 			// Jump to first record
+
+    	curr = ldir->lfile->lblob; 
     
 	while (curr != NULL)
-    {
-        if (strlen(curr->name) > 0xffffffff)
-        {
-		   return;
-        }
+    	{
+        	if (strlen(curr->name) > 0xffffffff)
+        	{
+		   	return;
+        	}
 
 		*((u32 *)c_ptr) = strlen(curr->name);
 		c_ptr += sizeof(u32); 
-		memcpy(c_ptr,curr->name,strlen(curr->name));
-        c_ptr += strlen(curr->name); 		// Jump to count of records
-        *((u32 *)c_ptr) = curr->size;
+		
+		memcpy(c_ptr, curr->name, strlen(curr->name));
+        	c_ptr += strlen(curr->name); 	// Jump to count of records
+        
+		*((u32 *)c_ptr) = curr->size;
 		c_ptr += sizeof(u32); 
-		memcpy(c_ptr,curr->loc,curr->size);
-        c_ptr+=curr->size;
-        curr = curr->next;
-    }
+		
+		memcpy(c_ptr, curr->loc, curr->size);
+       		c_ptr += curr->size;
+        	curr = curr->next;
+    	}
     
-    // Debugfs needs to know what the location and new size of the blob are.
-    root->blob->data = root->master;
-    root->blob->size = root->tot_size;
+    	// Debugfs needs to know what the location and new size of the blob are.
+    	root->blob->data = root->master;
+    	root->blob->size = root->tot_size;
 }
 
 /**
