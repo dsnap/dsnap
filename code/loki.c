@@ -10,9 +10,9 @@ static const u8 version = 1;
 /* PROTOTYPES */
 
 static struct loki_file *loki_create_file(char *name);
-static struct dentry *loki_create_record(char *name, struct loki_dir *ldir);
+static struct dentry *loki_create_blob(char *name, struct loki_dir *ldir);
 static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir);
-static int loki_create_blob(char *name, void *location, int size,
+static int loki_create_record(char *name, void *location, int size,
 				struct loki_dir *ldir);
 static void loki_construct_blob(struct loki_dir *ldir);
 static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name);
@@ -64,7 +64,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name,
 		return;
 	}
 
-	ldir->lfile->entry = loki_create_record(ldir->lfile->name, ldir);
+	ldir->lfile->entry = loki_create_blob(ldir->lfile->name, ldir);
 
 	if (!ldir->lfile->entry) {
 		printk(KERN_ERR "Loki: Unable to create blob '%s' "
@@ -95,7 +95,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name,
 }
 
 /**
- * Creates a Loki binary structure from lfiles.
+ * Builds a debugfs binary structure from lfiles.
  * @ldir: the Loki directory to operate in
  */
 static void loki_construct_blob(struct loki_dir *ldir)
@@ -127,7 +127,7 @@ static void loki_construct_blob(struct loki_dir *ldir)
 	*((u32 *)c_ptr) = root->records;
 	c_ptr += sizeof(u32);			/* Jump to first record */
 
-	curr = ldir->lfile->lblob;
+	curr = ldir->lfile->lrecord;
 
 	while (curr != NULL) {
 		if (strlen(curr->name) > 0xffffffff)
@@ -173,7 +173,7 @@ static struct loki_file *loki_create_file(char *name)
 
 	lfile->name = kstrdup(name, GFP_KERNEL);
 	lfile->entry = NULL;
-	lfile->lblob = NULL;
+	lfile->lrecord = NULL;
 
 	/* Location of master buffer */
 	lfile->records = 0;
@@ -183,13 +183,13 @@ static struct loki_file *loki_create_file(char *name)
 }
 
 /**
- * Creates a blob that holds driver data.
+ * Creates a debugfs blob that holds driver data.
  * @name: the name of the blob
  * @ldir: the Loki directory to operate in
  * @return: a pointer to the dentry object returned by the
  *          debugfs_create_blob call
  */
-static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
+static struct dentry *loki_create_blob(char *name, struct loki_dir *ldir)
 {
 	struct debugfs_blob_wrapper *blob;
 	struct dentry *entry;
@@ -230,75 +230,75 @@ static struct dentry *loki_create_record(char *name, struct loki_dir *ldir)
 void loki_add_to_blob(char *name, void *location, int size,
 			struct loki_dir *ldir)
 {
-	struct loki_record *lblob;
+	struct loki_record *lrecord;
 
-	lblob = loki_find_record(name, ldir);
+	lrecord = loki_find_record(name, ldir);
 
-	if (!lblob) {
+	if (!lrecord) {
 		/* Data has not been added to blob yet, so add it */
-		if ((loki_create_blob(name, location, size, ldir)) == -1) {
+		if ((loki_create_record(name, location, size, ldir)) == -1) {
 			printk(KERN_ERR "Loki: Unable to create Loki "
 					"blob '%s'.\n", name);
 			return;
 		}
 	} else {
 		/* Data already exists in blob */
-		if (size != lblob->size) {
+		if (size != lrecord->size) {
 			printk(KERN_ERR "Loki: Passed in size not equal "
 					"to size in list\n.");
 			return;
 		}
 
 		/* Copy data to offset in blob */
-		memcpy(ldir->lfile->master + lblob->offset, location, size);
+		memcpy(ldir->lfile->master + lrecord->offset, location, size);
 	}
 }
 
 /**
- * Creates a Loki blob.
- * @name: the name of the Loki blob
+ * Creates a Loki record.
+ * @name: the name of the Loki record
  * @location: the location of the data to store
  * @size: the size of the data to store
  * @ldir: the Loki directory to operate in
  * @return: -1 if an error occurs
  *	     0 otherwise
  */
-int loki_create_blob(char *name, void *location, int size,
+int loki_create_record(char *name, void *location, int size,
 			struct loki_dir *ldir)
 {
-	struct loki_record *lblob, *curr;
+	struct loki_record *lrecord, *curr;
 
 	int new_size = size +
 			ldir->lfile->tot_size +
 			strlen(name) +
 			(sizeof(u32) * 2);	/* Size and count */
 
-	lblob = kmalloc(sizeof(struct loki_record), GFP_KERNEL);
+	lrecord = kmalloc(sizeof(struct loki_record), GFP_KERNEL);
 
-	if (!lblob) {
+	if (!lrecord) {
 		printk(KERN_ERR "Loki: Unable to allocate memory for "
 				"Loki blob '%s'.\n",
 				name);
 		return -1;
 	}
 
-	lblob->name = kstrdup(name, GFP_KERNEL);
-	lblob->offset = new_size - size;    /* Size of record - size of data */
-	lblob->size = size;                 /* Size of data (in bytes) */
+	lrecord->name = kstrdup(name, GFP_KERNEL);
+	lrecord->offset = new_size - size;    /* Record size - data size */
+	lrecord->size = size;                 /* Size of data (in bytes) */
 
 	/* Add new Loki blob to the list */
-	if (!ldir->lfile->lblob) {
-		ldir->lfile->lblob = lblob;
+	if (!ldir->lfile->lrecord) {
+		ldir->lfile->lrecord = lrecord;
 	} else {
-		curr = ldir->lfile->lblob;
+		curr = ldir->lfile->lrecord;
 
 		while (curr && curr->next != NULL)
 			curr = curr->next;
 
-		curr->next = lblob;
+		curr->next = lrecord;
 	}
 
-	lblob->next = NULL;
+	lrecord->next = NULL;
 
 	/* Expand master blob to accomodate new data */
 	ldir->lfile->master = krealloc(ldir->lfile->master,
@@ -321,16 +321,16 @@ int loki_create_blob(char *name, void *location, int size,
 }
 
 /**
- * Finds a specified Loki blob.
- * @name: the name of the Loki blob to find
+ * Finds a specified Loki record.
+ * @name: the name of the Loki record to find
  * @ldir: the Loki directory to operate in
- * @return: a pointer to the Loki blob if found, else null
+ * @return: a pointer to the Loki record if found, else null
  */
 static struct loki_record *loki_find_record(char *name, struct loki_dir *ldir)
 {
 	struct loki_record *curr;
 
-	curr = ldir->lfile->lblob;
+	curr = ldir->lfile->lrecord;
 
 	while (curr != NULL) {
 		if ((strcmp(name, curr->name)) == 0)
@@ -360,7 +360,7 @@ void loki_cleanup(struct loki_dir *ldir)
 	kfree(ldir->lfile->master);
 
 	/* Remove each llist name */
-	curr = ldir->lfile->lblob;
+	curr = ldir->lfile->lrecord;
 
 	while (curr) {
 		kfree(curr->name);
