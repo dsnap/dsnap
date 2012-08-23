@@ -109,13 +109,9 @@ static void loki_construct_blob(struct loki_dir *ldir)
 	for (i = 0; i < ldir->lfile->tot_size; i++)
 		root->master[i] = 0;
 
-	*((u32 *)c_ptr) = sizeof(magic_number);	/* Start with magic number */
-	c_ptr += sizeof(magic_number);
 	memcpy(c_ptr, &magic_number, sizeof(magic_number));
 	c_ptr += sizeof(magic_number);		/* Jump to version number */
 
-	*((u32 *)c_ptr) = sizeof(version);
-	c_ptr += sizeof(version);
 	memcpy(c_ptr, &version, sizeof(version));
 	c_ptr += sizeof(version);		/* Jump to module name */
 
