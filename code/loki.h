@@ -22,14 +22,14 @@ struct loki_file {
 	char *name;
 	struct dentry *entry;
 	struct debugfs_blob_wrapper *blob;
-	struct loki_record *lblob;
+	struct loki_record *lrecord;
 	u8 *master;
 	int records;
 	int tot_size;
 };
 
 /**
- * A Loki blob contains a debugfs blob, along with information about its
+ * A Loki record contains a debugfs blob, along with information about its
  * location in the master blob file.
  */
 struct loki_record {
