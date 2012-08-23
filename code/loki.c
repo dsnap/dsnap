@@ -138,6 +138,9 @@ static void loki_construct_blob(struct loki_dir *ldir)
 		*((u32 *)c_ptr) = curr->size;
 		c_ptr += sizeof(u32);
 
+		memcpy(c_ptr, curr->location, curr->size);
+		c_ptr += curr->size;
+
 		curr = curr->next;
 	}
 
@@ -279,8 +282,9 @@ int loki_create_record(char *name, void *location, int size,
 	}
 
 	lrecord->name = kstrdup(name, GFP_KERNEL);
-	lrecord->offset = new_size - size;    /* Record size - data size */
-	lrecord->size = size;                 /* Size of data (in bytes) */
+	lrecord->offset = new_size - size;	/* Record size - data size */
+	lrecord->size = size;			/* Size of data (in bytes) */
+	lrecord->location = location;		/* Address in kernel memory */
 
 	/* Add new Loki blob to the list */
 	if (!ldir->lfile->lrecord) {
