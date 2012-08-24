@@ -30,10 +30,12 @@ def readBlob():
 
 	blob = args.filename
 
-	#puts item count into blobcount the comma is because unpack returns tuple
+	#Read the:
 	try:
-		namesize, = unpack("I", blob.read(4) )
-		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+		magicNum, = unpack("4s",blob.read(4)) #magic number
+		blobVersion, = unpack("B", blob.read(1)) #Version of blob format
+		namesize, = unpack("I", blob.read(4) ) #size in char of driver name
+		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4)) #name, record count
 	except OverflowError as e:
 		print("%s" %e)
 		print("Possible blob corruption, not a blob, or format changed without userspace consent!")
@@ -41,7 +43,11 @@ def readBlob():
 	except Exception as e:
 		print('Unspecified Error reading blob: %s' %e)
 		sys.exit(2)
-	
+		
+	if not magicNum == "Loki":
+		print "This file is not a blob!"
+		exit(2)
+		
 	#some tmp vars to hold pieces of each item
 	name = ""
 	namesize = 0
@@ -135,7 +141,7 @@ def printItem(item):
 		print tabs+"Size: "+str(size)
 		
 		print tabs+"Offset: "+str(offset)
-
+			
 		if data:
 
 			## Print data in a more readable format.
@@ -182,23 +188,7 @@ def printItem(item):
 			##
 			print translatedData
 
-#======================SEARCH FUNCTIONS=================================
-def nameSearch(arg):
-	found = 0
-	for i,item in enumerate(theData):
-		if not item:
-			continue
-			
-		match = re.search(arg,item[1])
-		if match:
-			found = found+1
-			print "=========Item "+str(found)+" ============"
-			printItem(item)
-			if not item[2]:
-				printItem(theData[i+1])
-	print "Found "+str(found)+" items"
-
-
+#======================Translator==================================
 ## Provides modular implementation of type specific tranlations from binary
 ## format to readable format.
 ##
@@ -261,7 +251,25 @@ def defaultTranslator(rawValue):
 ##
 def char_translator(rawValue):
 
-	return str(unpack('@c', rawValue)[0])
+	## Filter out non-printable and whitespace ASCII characters.
+	## We will only print ASCCI characters in the range (33 - 127):
+	##
+	## !"#$%&'()*+,-./0123456789:;<=>?@
+	## ABCDEFGHIJKLMNOPQRSTUVWXYZ\]^_`
+	## abcdefghijklmnopqrstuvwxyz{|}~
+	##
+	c = str(unpack('@c', rawValue)[0])
+	
+	if ord(c) > 32 and ord(c) < 127:
+
+		## Return printable character.
+		##
+		return c
+
+	else:
+		## Return default byte translation.
+		##
+		return defaultTranslator(rawValue)
 
 addTranslator("char", char_translator)
 
@@ -409,7 +417,28 @@ def u64_translator(rawValue):
 
 addTranslator("u64", u64_translator)
 
+## Translator for bool type
+##
+def bool_translator(rawValue):
+	
+	return str(unpack('?',rawValue)[0])
 
+addTranslator("bool",bool_translator)
+#======================SEARCH FUNCTIONS=================================
+def nameSearch(arg):
+	found = 0
+	for i,item in enumerate(theData):
+		if not item:
+			continue
+			
+		match = re.search(arg,item[1])
+		if match:
+			found = found+1
+			print "=========Item "+str(found)+" ============"
+			printItem(item)
+			if not item[2]:
+				printItem(theData[i+1])
+	print "Found "+str(found)+" items"
 #==================================RUN SOMETHING========================
 driver_name, dataItems = readBlob()
 mapStructs(dataItems)
