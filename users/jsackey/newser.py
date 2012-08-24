@@ -30,12 +30,12 @@ def readBlob():
 
 	blob = args.filename
 
-	#puts item count into blobcount the comma is because unpack returns tuple
+	#Read the:
 	try:
-		magicNum, = unpack("4s",blob.read(4))
-		blobVersion, = unpack("B", blob.read(1))
-		namesize, = unpack("I", blob.read(4) )
-		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+		magicNum, = unpack("4s",blob.read(4)) #magic number
+		blobVersion, = unpack("B", blob.read(1)) #Version of blob format
+		namesize, = unpack("I", blob.read(4) ) #size in char of driver name
+		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4)) #name, record count
 	except OverflowError as e:
 		print("%s" %e)
 		print("Possible blob corruption, not a blob, or format changed without userspace consent!")
@@ -398,6 +398,14 @@ def u64_translator(rawValue):
 	return str(unpack('=Q', rawValue)[0])
 
 addTranslator("u64", u64_translator)
+
+## Translator for bool type
+##
+def bool_translator(rawValue):
+	
+	return str(unpack('?',rawValue)[0])
+
+addTranslator("bool",bool_translator)
 #======================SEARCH FUNCTIONS=================================
 def nameSearch(arg):
 	found = 0
