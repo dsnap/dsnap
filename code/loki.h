@@ -36,6 +36,7 @@ struct loki_record {
 	char *name;
 	int offset;		/* index of starting location in master blob */
 	int size;		/* index of ending location in master blob */
+	void *location;
 	struct loki_record *next;
 };
 

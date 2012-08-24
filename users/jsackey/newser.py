@@ -30,10 +30,12 @@ def readBlob():
 
 	blob = args.filename
 
-	#puts item count into blobcount the comma is because unpack returns tuple
+	#Read the:
 	try:
-		namesize, = unpack("I", blob.read(4) )
-		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+		magicNum, = unpack("4s",blob.read(4)) #magic number
+		blobVersion, = unpack("B", blob.read(1)) #Version of blob format
+		namesize, = unpack("I", blob.read(4) ) #size in char of driver name
+		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4)) #name, record count
 	except OverflowError as e:
 		print("%s" %e)
 		print("Possible blob corruption, not a blob, or format changed without userspace consent!")
@@ -41,7 +43,11 @@ def readBlob():
 	except Exception as e:
 		print('Unspecified Error reading blob: %s' %e)
 		sys.exit(2)
-	
+		
+	if not magicNum == "Loki":
+		print "This file is not a blob!"
+		exit(2)
+		
 	#some tmp vars to hold pieces of each item
 	name = ""
 	namesize = 0
@@ -136,23 +142,270 @@ def printItem(item):
 		
 		print tabs+"Offset: "+str(offset)
 			
-		if not data:
-			pass
-		else:
-			print tabs+"Value: "+hexdump(data,int(size))
+		if data:
 
-#since I wasn't sure what the frig to do with printing data heres stupid old hexdump
-#copied from userspace.py, this prints the data to the screen as hex
-#Todo: a better data printer
-def hexdump(src, length=8):
-	result = []
-	digits = 4 if isinstance(src, unicode) else 2
-	for i in xrange(0, len(src), length):
-		s = src[i:i+length]
-		hexa = b' '.join(["%0*X" % (digits, ord(x))  for x in s])
+			## Print data in a more readable format.
+			## -------------------------------------
+			##
 
-	return hexa
+			## Add label to output string.
+			##
+			translatedData = tabs + "Value: "
 
+			## Find all array dimension size values, if any.
+			##
+			dimensionSizes = re.findall("\[([0-9]+)\]", name)
+
+			## (if 'data' represents an array)
+			##
+			if dimensionSizes:
+
+				## Handles multi-dimensional arrays.
+				##
+				## This is a bit of python's functional programming -
+				## the lambda function will perform multiplication
+				## on successive pairs in the list of array dimension
+				## sizes, which gives us the product of all elements
+				## in the list.
+				##
+				numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+				elementSize = size / numElements
+
+				## Attempt to translate each array element.
+				##
+				for x in xrange(numElements):
+
+					translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)])
+					translatedData += ' '
+
+			## (if 'data' does not represent an array)
+			##
+			else:
+
+				translatedData += translate(t, data)
+
+			## Print final result.
+			##
+			print translatedData
+
+#======================Translator==================================
+## Provides modular implementation of type specific tranlations from binary
+## format to readable format.
+##
+## David Huddleson
+## 8/20/2012
+## Last modified: 8/21/2012
+##
+
+
+## Declare global objects.
+##
+translators = {}
+
+
+## Main function definition.
+##
+def translate(typeString, rawValue):
+
+	if typeString in translators:
+
+		return translators[typeString](rawValue)
+
+	else:
+
+		return defaultTranslator(rawValue)
+
+
+## Helper function definition(s).
+##
+def addTranslator(typeString, translator):
+
+	translators[typeString] = translator
+
+
+## Translation function definition(s).
+## -----------------------------------
+##
+
+## Default translator.
+##
+def defaultTranslator(rawValue):
+
+	## Returns value in hex format: "AA BB CC DD EE FF ...".
+	##
+	#return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
+
+	## Returns value in hex format: "0xAABBCCDDEEFF...".
+	## This line also flips byte code:
+	## little-endian to big-endian, and little-endian to big-endian.
+	##
+	return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+
+
+## Type-specific defintions.
+## -------------------------
+##
+
+
+## Translator function for char type.
+##
+def char_translator(rawValue):
+
+	return str(unpack('@c', rawValue)[0])
+
+addTranslator("char", char_translator)
+
+
+## Translator for signed char type.
+##
+def signed_char_translator(rawValue):
+
+	return str(unpack('@b', rawValue)[0])
+
+addTranslator("signed char", signed_char_translator)
+
+
+## Translator for unsigned char type.
+##
+def unsigned_char_translator(rawValue):
+
+	return str(unpack('@B', rawValue)[0])
+
+addTranslator("unsigned char", unsigned_char_translator)
+
+
+## Translator for short int type.
+##
+def short_int_translator(rawValue):
+
+	return str(unpack('@h', rawValue)[0])
+
+addTranslator("short int", short_int_translator)
+
+
+## Translator for short unsigned int type.
+##
+def short_unsigned_int_translator(rawValue):
+
+	return str(unpack('@H', rawValue)[0])
+
+addTranslator("short unsigned int", short_unsigned_int_translator)
+
+
+## Translator for int type.
+##
+def int_translator(rawValue):
+
+	return str(unpack('@i', rawValue)[0])
+
+addTranslator("int", int_translator)
+
+
+## Translator for unsigned int type.
+##
+def unsigned_int_translator(rawValue):
+
+	return str(unpack('@I', rawValue)[0])
+
+addTranslator("unsigned int", unsigned_int_translator)
+
+
+## Translator for long int type.
+##
+def long_int_translator(rawValue):
+
+	return str(unpack('@l', rawValue)[0])
+
+addTranslator("long int", long_int_translator)
+
+
+## Translator for long unsigned int type.
+##
+def long_unsigned_int_translator(rawValue):
+
+	return str(unpack('@L', rawValue)[0])
+
+addTranslator("long unsigned int", long_unsigned_int_translator)
+
+
+## Translator for long long int type.
+##
+def long_long_int_translator(rawValue):
+
+	return str(unpack('@q', rawValue)[0])
+
+addTranslator("long long int", long_long_int_translator)
+
+
+## Translator for long long unsigned int type.
+##
+def long_long_unsigned_int_translator(rawValue):
+
+	return str(unpack('@Q', rawValue)[0])
+
+addTranslator("long long unsigned int", long_long_unsigned_int_translator)
+
+
+## Translator for float type.
+##
+def float_translator(rawValue):
+
+	return str(unpack('@f', rawValue)[0])
+
+addTranslator("float", float_translator)
+
+
+## Translator for double type.
+##
+def double_translator(rawValue):
+
+	return str(unpack('@d', rawValue)[0])
+
+addTranslator("double", double_translator)
+
+
+## Translator for u8 type (unsigned byte value).
+##
+def u8_translator(rawValue):
+
+	return str(unpack('=B', rawValue)[0])
+
+addTranslator("u8", u8_translator)
+
+
+## Translator for u16 type (unsigned 16-bit value).
+##
+def u16_translator(rawValue):
+
+	return str(unpack('=H', rawValue)[0])
+
+addTranslator("u16", u16_translator)
+
+
+## Translator for u32 type (unsigned 32-bit value).
+##
+def u32_translator(rawValue):
+
+	return str(unpack('=L', rawValue)[0])
+
+addTranslator("u32", u32_translator)
+
+
+## Translator for u64 type (unsigned 64-bit value).
+##
+def u64_translator(rawValue):
+
+	return str(unpack('=Q', rawValue)[0])
+
+addTranslator("u64", u64_translator)
+
+## Translator for bool type
+##
+def bool_translator(rawValue):
+	
+	return str(unpack('?',rawValue)[0])
+
+addTranslator("bool",bool_translator)
 #======================SEARCH FUNCTIONS=================================
 def nameSearch(arg):
 	found = 0

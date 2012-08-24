@@ -109,13 +109,9 @@ static void loki_construct_blob(struct loki_dir *ldir)
 	for (i = 0; i < ldir->lfile->tot_size; i++)
 		root->master[i] = 0;
 
-	*((u32 *)c_ptr) = sizeof(magic_number);	/* Start with magic number */
-	c_ptr += sizeof(magic_number);
 	memcpy(c_ptr, &magic_number, sizeof(magic_number));
 	c_ptr += sizeof(magic_number);		/* Jump to version number */
 
-	*((u32 *)c_ptr) = sizeof(version);
-	c_ptr += sizeof(version);
 	memcpy(c_ptr, &version, sizeof(version));
 	c_ptr += sizeof(version);		/* Jump to module name */
 
@@ -141,6 +137,9 @@ static void loki_construct_blob(struct loki_dir *ldir)
 
 		*((u32 *)c_ptr) = curr->size;
 		c_ptr += sizeof(u32);
+
+		memcpy(c_ptr, curr->location, curr->size);
+		c_ptr += curr->size;
 
 		curr = curr->next;
 	}
@@ -233,7 +232,7 @@ void loki_add_to_blob(char *name, void *location, int size,
 	struct loki_record *lrecord;
 
 	lrecord = loki_find_record(name, ldir);
-
+	
 	if (!lrecord) {
 		/* Data has not been added to blob yet, so add it */
 		if ((loki_create_record(name, location, size, ldir)) == -1) {
@@ -249,6 +248,9 @@ void loki_add_to_blob(char *name, void *location, int size,
 			return;
 		}
 
+		/* Change location to value passed in */
+		lrecord->location = location;
+		
 		/* Copy data to offset in blob */
 		memcpy(ldir->lfile->master + lrecord->offset, location, size);
 	}
@@ -283,8 +285,9 @@ int loki_create_record(char *name, void *location, int size,
 	}
 
 	lrecord->name = kstrdup(name, GFP_KERNEL);
-	lrecord->offset = new_size - size;    /* Record size - data size */
-	lrecord->size = size;                 /* Size of data (in bytes) */
+	lrecord->offset = new_size - size;	/* Record size - data size */
+	lrecord->size = size;			/* Size of data (in bytes) */
+	lrecord->location = location;		/* Address in kernel memory */
 
 	/* Add new Loki blob to the list */
 	if (!ldir->lfile->lrecord) {
