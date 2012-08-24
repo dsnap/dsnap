@@ -232,7 +232,7 @@ void loki_add_to_blob(char *name, void *location, int size,
 	struct loki_record *lrecord;
 
 	lrecord = loki_find_record(name, ldir);
-
+	
 	if (!lrecord) {
 		/* Data has not been added to blob yet, so add it */
 		if ((loki_create_record(name, location, size, ldir)) == -1) {
@@ -248,6 +248,9 @@ void loki_add_to_blob(char *name, void *location, int size,
 			return;
 		}
 
+		/* Change location to value passed in */
+		lrecord->location = location;
+		
 		/* Copy data to offset in blob */
 		memcpy(ldir->lfile->master + lrecord->offset, location, size);
 	}
