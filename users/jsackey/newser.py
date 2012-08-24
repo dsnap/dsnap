@@ -32,6 +32,8 @@ def readBlob():
 
 	#puts item count into blobcount the comma is because unpack returns tuple
 	try:
+		magicNum, = unpack("4s",blob.read(4))
+		blobVersion, = unpack("B", blob.read(1))
 		namesize, = unpack("I", blob.read(4) )
 		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
 	except OverflowError as e:
@@ -41,7 +43,12 @@ def readBlob():
 	except Exception as e:
 		print('Unspecified Error reading blob: %s' %e)
 		sys.exit(2)
-	
+		
+	if not magicNum == "Loki":
+		print "This file is not a blob!"
+		exit(2)
+		
+	print( str(blobVersion))
 	#some tmp vars to hold pieces of each item
 	name = ""
 	namesize = 0
@@ -53,7 +60,9 @@ def readBlob():
 		#get the size of name, the name, and size of data from each item
 		try:
 			namesize, = unpack("I", blob.read(4) )
-			name,itemSize = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+			name, = unpack( str(namesize)+"s", blob.read(namesize) )
+			itemSize, = unpack("I", blob.read(4) )
+			#name,itemSize = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
 		except OverflowError as e:
 			print("%s" %e)
 			print("Is the blob a blob is it formatted wrong is it corrupt <<MAKE THIS NICER")
