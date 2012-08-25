@@ -231,10 +231,6 @@ def addTranslator(typeString, translator):
 ##
 def defaultTranslator(rawValue):
 
-	## Returns value in hex format: "AA BB CC DD EE FF ...".
-	##
-	#return ''.join(["%02X " % ord(x) for x in rawValue]).strip()
-
 	## Returns value in hex format: "0xAABBCCDDEEFF...".
 	## This line also flips byte code:
 	## little-endian to big-endian, and little-endian to big-endian.
@@ -251,7 +247,25 @@ def defaultTranslator(rawValue):
 ##
 def char_translator(rawValue):
 
-	return str(unpack('@c', rawValue)[0])
+	## Filter out non-printable and whitespace ASCII characters.
+	## We will only print ASCCI characters in the range (33 - 127):
+	##
+	## !"#$%&'()*+,-./0123456789:;<=>?@
+	## ABCDEFGHIJKLMNOPQRSTUVWXYZ\]^_`
+	## abcdefghijklmnopqrstuvwxyz{|}~
+	##
+	c = str(unpack('@c', rawValue)[0])
+	
+	if ord(c) > 32 and ord(c) < 127:
+
+		## Return printable character.
+		##
+		return c
+
+	else:
+		## Return default byte translation.
+		##
+		return defaultTranslator(rawValue)
 
 addTranslator("char", char_translator)
 
@@ -399,7 +413,7 @@ def u64_translator(rawValue):
 
 addTranslator("u64", u64_translator)
 
-## Translator for bool type
+## Translator for bool type.
 ##
 def bool_translator(rawValue):
 	
