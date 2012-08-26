@@ -1,10 +1,11 @@
-#newser.py - A new user space tool to read/display loki records
-#			 rewritten to be more modular and extendable.
+# userspace.py - A user space tool to read/display loki records
+# 
+# Currently supported version(s) of loki record file: 1
 import sys
-from struct import * #lets me use unpack instead of struct.unpack
-import subprocess as sp
-import re #regular expression support, gives us simple search
-import argparse #this gives a nice way to parse arguments
+from struct import * # unpack instead of struct.unpack
+import subprocess as sp #subprocess is used to call pahole
+import re # regular expression support, provides search capabilities
+import argparse #this gives a nice way to include command line arguments
 
 theData = [] #a global to hold all the data
 
@@ -16,18 +17,20 @@ parser = argparse.ArgumentParser(description="A tool to read loki generated Reco
 parser.add_argument("filename", help="A valid Loki record file",type=argparse.FileType('rb') )
 parser.add_argument("-S", "--search", help="Search for items by name from the record file.",metavar="<string or regex>")
 parser.add_argument("-V", "--version", help="Displays version information",action="version", version="%(prog)s 2.718")
-	
+parser.add_argument("-le", "--little-endian", help="Flag to display hex data in little endian", action="store_true")
+
 	#parse arg[v] and put it into the args obj
 args = parser.parse_args()
 	#now args.argname can access various args, Example: recordFile = args.filename 
-#print vars(args)
-#print args
 
+#Set big_endian based on system, used later on for printing based on -le flag
+if pack("h",1) == "\000\001":
+	big_endian = True
+else:
+	big_endian = False
+	
+			
 #===================READ RECORRDS===================
-# This section:
-#				readFile() - pulls records from record file returns driver name and dataItems
-#				mapStructs - goes through the dataItems, calling addStructs to add them to theData
-#				addStructs - helper for mapStructs, recursively reads items from passed in record
 
 def readFile():
 	'''Reads the record file and returns the tuple (driver_name,dataItems) '''
@@ -268,12 +271,27 @@ def addTranslator(typeString, translator):
 ## Default translator.
 ##
 def defaultTranslator(rawValue):
+	## Returns value in hex format: "0xAABBCCDDEEFF..." in big endian by
+	## 
+	## args.little_endian: true if -le was used
+	## big_endian: true if system is big endian (gets set in argparse section above)
+	## 
+	## 
+	##return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	
+	if args.little_endian: #if -le flag print little endian
+		if big_endian: 
+			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+		else:
+			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
+	else: #no le flag, print big endian (default)
+		if big_endian: 
+			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
+		else:
+			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
 
-	## Returns value in hex format: "0xAABBCCDDEEFF...".
-	## This line also flips byte code:
-	## little-endian to big-endian, and little-endian to big-endian.
-	##
-	return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	
+	
 
 
 ## Type-specific defintions.
