@@ -28,8 +28,7 @@ if pack("h",1) == "\000\001":
 	big_endian = True
 else:
 	big_endian = False
-	
-			
+
 #===================READ RECORRDS===================
 
 def readFile():
@@ -271,27 +270,21 @@ def addTranslator(typeString, translator):
 ## Default translator.
 ##
 def defaultTranslator(rawValue):
-	## Returns value in hex format: "0xAABBCCDDEEFF..." in big endian by
-	## 
+	## Returns value in hex format: "0xAABBCCDDEEFF..."
+	## Note: endianness is decided based on system native and -le flag
+	##
 	## args.little_endian: true if -le was used
-	## big_endian: true if system is big endian (gets set in argparse section above)
-	## 
-	## 
-	##return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
-	
-	if args.little_endian: #if -le flag print little endian
-		if big_endian: 
-			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
-		else:
-			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
-	else: #no le flag, print big endian (default)
-		if big_endian: 
-			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
-		else:
-			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	## big_endian: true if system is big endian (gets set in argparse section above) 
 
-	
-	
+	# When these are both true then system is big endian, but -le is set
+	# when they are both false then system is little endian, but -le is not set
+	# in either case the endianness needs flipped
+	if args.little_endian == big_endian:
+		return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	else:
+		# Otherwise, data is already in desired endianness
+		return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
+
 
 
 ## Type-specific defintions.
