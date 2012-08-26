@@ -1,52 +1,66 @@
-#newser.py - A new user space tool to read/display loki blobs
-#			 rewritten to be more modular and extendable.
+# userspace.py - A user space tool to read/display loki records
+# 
+# Currently supported version(s) of loki record file: 1
 import sys
-from struct import * #lets me use unpack instead of struct.unpack
-import pahole
-import re #regular expression support, gives us simple search
-import argparse #this gives a nice way to parse arguments
+from struct import * # unpack instead of struct.unpack
+import subprocess as sp #subprocess is used to call pahole
+import re # regular expression support, provides search capabilities
+import argparse #this gives a nice way to include command line arguments
 
 theData = [] #a global to hold all the data
 
-#===================SET UP ARGPARSE=============================
+#===================ARGPARSE===================
 	#first make a parser obj
-parser = argparse.ArgumentParser(description="A tool to read loki generated blob files")
+parser = argparse.ArgumentParser(description="A tool to read loki generated Record files")
 
 	#add arguments to the parser via parser.add_argument()
-parser.add_argument("filename", help="A valid Loki Blob file",type=argparse.FileType('rb') )
-parser.add_argument("-S", "--search", help="Search for items by name from the blob file.",metavar="<string or regex>")
+parser.add_argument("filename", help="A valid Loki record file",type=argparse.FileType('rb') )
+parser.add_argument("-S", "--search", help="Search for items by name from the record file.",metavar="<string or regex>")
 parser.add_argument("-V", "--version", help="Displays version information",action="version", version="%(prog)s 2.718")
-	
+parser.add_argument("-le", "--little-endian", help="Flag to display hex data in little endian", action="store_true")
+
 	#parse arg[v] and put it into the args obj
 args = parser.parse_args()
-	#now args.argname can access various args, Example: blob = args.filename 
-#print vars(args)
-#print args
+	#now args.argname can access various args, Example: recordFile = args.filename 
 
-#====================================================
-#open specified blob and extract data from file obj
-def readBlob():
-	'''Reads the blob file and returns the tuple (driver_name,dataItems) '''
+#Set big_endian based on system, used later on for printing based on -le flag
+if pack("h",1) == "\000\001":
+	big_endian = True
+else:
+	big_endian = False
 
-	blob = args.filename
+#===================READ RECORRDS===================
 
-	#Read the:
+def readFile():
+	'''Reads the record file and returns the tuple (driver_name,dataItems) '''
+	
+	#record File is in args.filename
+	recF = args.filename 
+
+	#Read the;	magic number, record file version, size of driver name, 
+	#			driver name, and recordCount from record file.
 	try:
-		magicNum, = unpack("4s",blob.read(4)) #magic number
-		blobVersion, = unpack("B", blob.read(1)) #Version of blob format
-		namesize, = unpack("I", blob.read(4) ) #size in char of driver name
-		driver_name,blobcount = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4)) #name, record count
+		magicNum, = unpack("4s",recF.read(4)) #magic number
+		if not magicNum == "Loki":
+			print "Not a loki record file!"
+			exit(2)
+			
+		recFVersion, = unpack("B", recF.read(1)) #Version of recF format
+		if recFVersion != 1: 
+			print("Userspace tool is for version 1 record file only!")
+			exit(2)
+			
+		namesize, = unpack("I", recF.read(4) ) #size in char of driver name
+		driver_name,recordCount = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4)) #name, record count
 	except OverflowError as e:
 		print("%s" %e)
-		print("Possible blob corruption, not a blob, or format changed without userspace consent!")
+		print("The record may be corrupt")
 		sys.exit(2)
 	except Exception as e:
-		print('Unspecified Error reading blob: %s' %e)
+		print('Unspecified Error reading record file: %s' %e)
 		sys.exit(2)
 		
-	if not magicNum == "Loki":
-		print "This file is not a blob!"
-		exit(2)
+	
 		
 	#some tmp vars to hold pieces of each item
 	name = ""
@@ -54,25 +68,25 @@ def readBlob():
 	itemSize = 0
 	dataItems = []
 
-	#for each item in the blob add a tuple to dataitems
-	for i in range(blobcount):
+	#for each record add a tuple to dataitems
+	for i in range(recordCount):
 		#get the size of name, the name, and size of data from each item
 		try:
-			namesize, = unpack("I", blob.read(4) )
-			name,itemSize = unpack(("="+str(namesize)+"s"+" I"), blob.read(namesize+4))
+			namesize, = unpack("I", recF.read(4) )
+			name,itemSize = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4))
 		except OverflowError as e:
 			print("%s" %e)
-			print("Is the blob a blob is it formatted wrong is it corrupt <<MAKE THIS NICER")
+			print("Record file is either corrupt or lying about version")
 			sys.exit(2)
 		except Exception as e:
-			print('Error reading blob: %s' %e)
+			print('Error reading record: %s' %e)
 			sys.exit(2)
 
-		data = blob.read(itemSize)
+		data = recF.read(itemSize)
 		dataItems.append( (name,itemSize,data))
 
-	blob.close()
-	return (driver_name,dataItems)	
+	recF.close()
+	return (driver_name,dataItems)
 '''
 After calling mapStructs theData is a list of tuples t such that:
 	- t = None ->  the start of a new item from dataItems
@@ -94,7 +108,7 @@ def mapStructs(dataItems):
 #Helper function for mapStructs, recursively adds items to theData
 def addStructs(name, data,dsize,level=0):
 	global theData
-	map = pahole.get_map(name)
+	map = get_map(name)
 	
 	if map:
 		theData.append((None,name,None,None,None,level))
@@ -108,8 +122,34 @@ def addStructs(name, data,dsize,level=0):
 	else:
 		theData.append( (None,name,dsize,None,data,level) )
 	return 
+#===================PAHOLE===================	
+def get_map(arg):
+    map = {}
+    lines = get_class(arg).split("\n")
+    for line in lines:
+        
+        match = re.search("\t(.+[\w\d*])\s\s+(\w.*);.+/*\s+(\d+)\s+(\d+)",line)
 
-#=============================PRINTING FUNCTIONS=======================
+        if match:
+
+            t,name,offset,size =match.group(1),match.group(2),match.group(3),match.group(4)
+            map[int(offset)] = (t,name,int(size))
+
+    if map != {}:
+        return map
+    else:
+        return None
+            
+def get_class(arg):
+    return run_pahole(["-C",str(arg)])
+
+def run_pahole(args=[]):
+    #list of args passed in
+    args =["pahole"]+args+["e1000.ko"]
+    
+    val=sp.check_output(args)
+    return val
+#===================PRINTING FUNCTIONS===================
 
 # a print all function, usefull later? Maybe, for now it's mainly a tool 
 # for making sure the other stuff is working correctly
@@ -188,7 +228,7 @@ def printItem(item):
 			##
 			print translatedData
 
-#======================Translator==================================
+#===================TRANSLATOR===================
 ## Provides modular implementation of type specific tranlations from binary
 ## format to readable format.
 ##
@@ -230,12 +270,21 @@ def addTranslator(typeString, translator):
 ## Default translator.
 ##
 def defaultTranslator(rawValue):
-
-	## Returns value in hex format: "0xAABBCCDDEEFF...".
-	## This line also flips byte code:
-	## little-endian to big-endian, and little-endian to big-endian.
+	## Returns value in hex format: "0xAABBCCDDEEFF..."
+	## Note: endianness is decided based on system native and -le flag
 	##
-	return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	## args.little_endian: true if -le was used
+	## big_endian: true if system is big endian (gets set in argparse section above) 
+
+	# When these are both true then system is big endian, but -le is set
+	# when they are both false then system is little endian, but -le is not set
+	# in either case the endianness needs flipped
+	if args.little_endian == big_endian:
+		return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+	else:
+		# Otherwise, data is already in desired endianness
+		return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
+
 
 
 ## Type-specific defintions.
@@ -420,7 +469,7 @@ def bool_translator(rawValue):
 	return str(unpack('?',rawValue)[0])
 
 addTranslator("bool",bool_translator)
-#======================SEARCH FUNCTIONS=================================
+#===================SEARCH FUNCTIONS===================
 def nameSearch(arg):
 	found = 0
 	for i,item in enumerate(theData):
@@ -435,8 +484,8 @@ def nameSearch(arg):
 			if not item[2]:
 				printItem(theData[i+1])
 	print "Found "+str(found)+" items"
-#==================================RUN SOMETHING========================
-driver_name, dataItems = readBlob()
+#===================RUN SOMETHING===================
+driver_name, dataItems = readFile()
 mapStructs(dataItems)
 print("Driver name: " + driver_name)
 if args.search:
