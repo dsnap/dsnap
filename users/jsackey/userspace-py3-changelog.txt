@@ -1,0 +1,44 @@
+Changes to userspace to get it working with python3:
+-Changed any print x to print(x)
+
+-Dealt with byte strings via string.decode('utf-8') (I.e. the magic number in python2 unpacks as 'Loki' and in python3 b'Loki')
+
+-removed ord() from translate function
+
+-imported functools for reduce() (reduce() is a builtin in python2)
+
+-changed xrange() to range() (in python3 range() does what xrange() used to and so xrange() is removed)
+
+-In printItem(), changed elementSize = size/numElements to = int(size/numElements), because float was messing with the data slicing in translate
+
+So far the only testing I've done is to run userspace and userspace-py3 to compare the output.
+
+The only differences are that values change in these 5 items:
+
+Name: spinlock_t stats_lock                                                     
+Size: 2                                                                         
+Offset: 540                                                                     
+Value: 0x2727     <---Value changes
+
+Name: bool detect_tx_hung                                                       
+Size: 1                                                                         
+Offset: 649                                                                     
+Value: False     <---Value changes
+
+Name: long unsigned int expires                                 
+Size: 4                                                         
+Offset: 8                                                       
+Value: 2722122	<---Value changes
+
+Name: spinlock_t wait_lock                                              
+Size: 2                                                                 
+Offset: 4                                                               
+Value: 0x5151	<---Value changes
+
+Name: struct task_struct * owner                                        
+Size: 4                                                                 
+Offset: 16                                                              
+Value: 0xF4F9CFC0  <---Value changes
+
+
+                  
