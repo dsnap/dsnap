@@ -1,6 +1,6 @@
-
-'''  Copyright(C) 2012 Computer Science Capstone (Spring/Summer) Team
-             2.718 Portland State University
+'''
+Copyright(c) 2012 Computer Science Capstone (Spring/Summer)
+	   Team 2.718 Portland State University
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -9,7 +9,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -17,18 +17,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 '''
 
-# loki.py - A user space tool to read/display loki records
+#
+# loki.py - A user space tool to read/display Loki records.
 # 
-# Currently supported version(s) of loki record file: 1
+# Supported version of Loki record format: 1
+#
+
 import sys
-from struct import * # unpack instead of struct.unpack
-import subprocess as sp #subprocess is used to call pahole
-import re # regular expression support, provides search capabilities
-import argparse #this gives a nice way to include command line arguments
-import functools
+from struct import * 		# For use of unpack instead of struct.unpack.
+import subprocess as sp 	# Used to call pahole.
+import re 			# Regular expression support for search.
+import argparse 		# Command line argument parsing.
+import functools		# For python3 reduce() function.
 
 pyversion = 2 if sys.version_info < (3, 0, 0) else 3
-theData = [] #a global to hold all the data
+theData	= []
 
 # ========== ARGUMENT PARSING ========== #
 
