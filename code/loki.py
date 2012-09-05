@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 '''
 
-# userspace.py - A user space tool to read/display loki records
+# loki.py - A user space tool to read/display loki records
 # 
 # Currently supported version(s) of loki record file: 1
 import sys
