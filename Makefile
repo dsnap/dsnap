@@ -1,18 +1,23 @@
-obj-y := test-drivers/e1000/ src/
+KERNEL_DIR = "/lib/modules/$(shell uname -r)/build"
+SOURCE_DIR = "src"
+DRIVER_DIR = "test-drivers"
+LOKI = "loki"
+
+obj-y := $(DRIVER_DIR)/$(DRIVER)/ $(SOURCE_DIR)/
 
 all:
-	$(shell cp -f src/loki.h test-drivers/e1000)
-	make -C /lib/modules/$(shell uname -r)/build \
+	$(shell cp -f $(SOURCE_DIR)/$(LOKI).h $(DRIVER_DIR)/$(DRIVER))
+	make -C $(KERNEL_DIR) \
 	M=$(PWD)
 	
 install:
-	$(shell rmmod e1000)
-	$(shell rmmod loki)
-	$(shell insmod src/loki.ko)
-	$(shell insmod test-drivers/e1000/e1000.ko)
-	$(shell cp -f test-drivers/e1000/e1000.ko src/e1000.ko)
+	$(shell rmmod $(DRIVER))
+	$(shell rmmod $(LOKI))
+	$(shell insmod $(SOURCE_DIR)/$(LOKI).ko)
+	$(shell insmod $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko)
+	$(shell cp -f $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko $(SOURCE_DIR)/$(DRIVER).ko)
 	
 clean:
-	make -C /lib/modules/$(shell uname -r)/build \
+	make -C $(KERNEL_DIR) \
 	M=$(PWD) \
 	clean
