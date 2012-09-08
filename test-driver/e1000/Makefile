@@ -33,9 +33,13 @@
 obj-m += e1000.o
 
 all:
-	make  -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+	make -C /lib/modules/$(shell uname -r)/build \
+	M=$(PWD) \
+	modules
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build \
+	M=$(PWD) \
+	clean
 
-e1000-objs := e1000_main.o e1000_hw.o e1000_ethtool.o e1000_param.o loki.o
+e1000-objs := e1000_main.o e1000_hw.o e1000_ethtool.o e1000_param.o

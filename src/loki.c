@@ -1,11 +1,27 @@
+#include <linux/debugfs.h>
 #include <linux/err.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/slab.h>
 #include "loki.h"
-#include "e1000.h"
 
-/* GLOBAL VARIABLES */
+/* GLOBALS */
 
 static const int magic_number = 0x696b6f4c;	/* "Loki" in ASCII */
-static const u8 version = 1;
+static const u8 format_version = 1;
+
+MODULE_AUTHOR("David Huddleson <huddlesd@cs.pdx.edu>, "
+		"Kyle Pelton <kpelton@cs.pdx.edu>, "
+		"Devin Quirozoliver <arik182@cs.pdx.edu>, "
+		"Ekaterina Ryabtseva <ekaterir@cs.pdx.edu>, "
+		"John Sackey <sackey@gmail.com>, "
+		"Jacob Sowles <sowlesj@gmail.com>");
+
+MODULE_DESCRIPTION("Adds driver state snapshot capabilities "
+			"to device drivers.");
+
+MODULE_LICENSE("GPL");
+MODULE_VERSION("1.0");
 
 /* PROTOTYPES */
 
@@ -18,6 +34,16 @@ static void loki_construct_blob(struct loki_dir *ldir);
 static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name);
 
 /* FUNCTIONS */
+
+/**
+ * Loads the kernel module.
+ * @return: 0 on success, non-zero on failure.
+ */
+int init_module(void)
+{
+	printk(KERN_INFO "Loki: Module loaded.\n");
+	return 0;
+}
 
 /**
  * Initializes the Loki framework.
@@ -77,7 +103,7 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name,
 	ldir->lfile->tot_size = (sizeof(u32) * 2) +
 				strlen(ldir->name) +
 				sizeof(magic_number) +
-				sizeof(version);
+				sizeof(format_version);
 
 	/* Allocate memory for master */
 	ldir->lfile->master = kmalloc(ldir->lfile->tot_size, GFP_KERNEL);
@@ -93,6 +119,8 @@ void loki_init(char *dir_name, struct loki_dir *ldir, char *file_name,
 
 	printk(KERN_INFO "Loki: Initialization complete.\n");
 }
+
+EXPORT_SYMBOL(loki_init);
 
 /**
  * Builds a debugfs binary structure from lfiles.
@@ -112,8 +140,8 @@ static void loki_construct_blob(struct loki_dir *ldir)
 	memcpy(c_ptr, &magic_number, sizeof(magic_number));
 	c_ptr += sizeof(magic_number);		/* Jump to version number */
 
-	memcpy(c_ptr, &version, sizeof(version));
-	c_ptr += sizeof(version);		/* Jump to module name */
+	memcpy(c_ptr, &format_version, sizeof(format_version));
+	c_ptr += sizeof(format_version);	/* Jump to module name */
 
 	*((u32 *)c_ptr) = strlen(ldir->name);
 	c_ptr += sizeof(u32);
@@ -256,6 +284,8 @@ void loki_add_to_blob(char *name, void *location, int size,
 	}
 }
 
+EXPORT_SYMBOL(loki_add_to_blob);
+
 /**
  * Creates a Loki record.
  * @name: the name of the Loki record
@@ -380,6 +410,8 @@ void loki_cleanup(struct loki_dir *ldir)
 	printk(KERN_INFO "Loki: Cleanup complete.\n");
 }
 
+EXPORT_SYMBOL(loki_cleanup);
+
 /**
  * Stores the path name of the debugfs root directory.
  * @debugfs_root: the path to the debugfs root directory
@@ -400,4 +432,12 @@ static char *loki_set_debugfs_root(char *debugfs_root, char *dir_name)
 	strcat(path, dir_name);
 
 	return path;
+}
+
+/**
+ * Unloads the kernel module.
+ */
+void cleanup_module(void)
+{
+	printk(KERN_INFO "Loki: Module unloaded.\n");
 }

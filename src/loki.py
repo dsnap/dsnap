@@ -1,30 +1,34 @@
-# userspace.py - A user space tool to read/display loki records
+#
+# loki.py - A user space tool to read/display Loki records.
 # 
-# Currently supported version(s) of loki record file: 1
+# Supported version of Loki record format: 1
+#
+
 import sys
-from struct import * # unpack instead of struct.unpack
-import subprocess as sp #subprocess is used to call pahole
-import re # regular expression support, provides search capabilities
-import argparse #this gives a nice way to include command line arguments
+from struct import * 		# For use of unpack instead of struct.unpack.
+import subprocess as sp 	# Used to call pahole.
+import re 			# Regular expression support for search.
+import argparse 		# Command line argument parsing.
+import functools		# For python3 reduce() function.
 
-theData = [] #a global to hold all the data
+pyversion = 2 if sys.version_info < (3, 0, 0) else 3
+theData	= []
 
-#===================ARGPARSE===================
-	#first make a parser obj
-parser = argparse.ArgumentParser(description="A tool to read loki generated Record files")
+# ========== ARGUMENT PARSING ========== #
 
-	#add arguments to the parser via parser.add_argument()
-parser.add_argument("filename", help="A valid Loki record file",type=argparse.FileType('rb') )
-parser.add_argument("-S", "--search", help="Search for items by name from the record file.",metavar="<string or regex>")
-parser.add_argument("-V", "--version", help="Displays version information",action="version", version="%(prog)s 2.718")
-parser.add_argument("-le", "--little-endian", help="Flag to display hex data in little endian", action="store_true")
+# Make a parser object.
+parser = argparse.ArgumentParser(description = "A tool to read loki generated Record files")
 
-	#parse arg[v] and put it into the args obj
+# Add arguments to the parser.
+parser.add_argument("filename", help = "A valid Loki record file", type = argparse.FileType('rb'))
+parser.add_argument("-S", "--search", help = "Search for items by name from the record file.", metavar = "<string or regex>")
+parser.add_argument("-V", "--version", help = "Displays version information", action = "version", version = "%(prog)s 2.718")
+parser.add_argument("-le", "--little-endian", help = "Flag to display hex data in little endian", action = "store_true")
+
 args = parser.parse_args()
-	#now args.argname can access various args, Example: recordFile = args.filename 
 
-#Set big_endian based on system, used later on for printing based on -le flag
-if pack("h",1) == "\000\001":
+# Set big_endian based on system, used later on for printing based on -le flag.
+if (pack("h",1) == "\000\001"):
 	big_endian = True
 else:
 	big_endian = False
@@ -41,8 +45,12 @@ def readFile():
 	#			driver name, and recordCount from record file.
 	try:
 		magicNum, = unpack("4s",recF.read(4)) #magic number
+		
+		if (pyversion == 3):
+			magicNum = magicNum.decode("utf-8");
+
 		if not magicNum == "Loki":
-			print "Not a loki record file!"
+			print("Not a loki record file!")
 			exit(2)
 			
 		recFVersion, = unpack("B", recF.read(1)) #Version of recF format
@@ -52,6 +60,10 @@ def readFile():
 			
 		namesize, = unpack("I", recF.read(4) ) #size in char of driver name
 		driver_name,recordCount = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4)) #name, record count
+	
+		if (pyversion == 3):
+			driver_name = driver_name.decode("utf-8")
+
 	except OverflowError as e:
 		print("%s" %e)
 		print("The record may be corrupt")
@@ -74,6 +86,10 @@ def readFile():
 		try:
 			namesize, = unpack("I", recF.read(4) )
 			name,itemSize = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4))
+
+			if (pyversion == 3):
+				name = name.decode("utf-8")
+
 		except OverflowError as e:
 			print("%s" %e)
 			print("Record file is either corrupt or lying about version")
@@ -96,7 +112,12 @@ After calling mapStructs theData is a list of tuples t such that:
 	- t = (t,name,size,p,data[p:p+size],level) -> actual data item'''
 def mapStructs(dataItems):
 	for item in dataItems:
-		name = item[0].split(b'\0',1)[0]
+		if (pyversion == 2):
+			name = item[0].split(b'\0',1)[0]
+
+		else:
+			name = item[0].split('\0',1)[0]
+
 		data = item[2]
 		dsize = item[1]
 		#my ghetto way of signifying the beginning of each dataItem
@@ -124,21 +145,28 @@ def addStructs(name, data,dsize,level=0):
 	return 
 #===================PAHOLE===================	
 def get_map(arg):
-    map = {}
-    lines = get_class(arg).split("\n")
-    for line in lines:
-        
-        match = re.search("\t(.+[\w\d*])\s\s+(\w.*);.+/*\s+(\d+)\s+(\d+)",line)
+	map = {}
 
-        if match:
+	if pyversion == 2:
+		lines = get_class(arg).split("\n")
 
-            t,name,offset,size =match.group(1),match.group(2),match.group(3),match.group(4)
-            map[int(offset)] = (t,name,int(size))
+	else:
+		lines = get_class(arg).split(b"\n")
 
-    if map != {}:
-        return map
-    else:
-        return None
+	for line in lines:
+		if (pyversion == 3):
+			line = line.decode("utf-8")
+ 
+		match = re.search("\t(.+[\w\d*])\s\s+(\w.*);.+/*\s+(\d+)\s+(\d+)",line)
+
+		if match:
+			t,name,offset,size =match.group(1),match.group(2),match.group(3),match.group(4)
+			map[int(offset)] = (t,name,int(size))
+
+	if map != {}:
+		return map
+	else:
+		return None
             
 def get_class(arg):
     return run_pahole(["-C",str(arg)])
@@ -146,7 +174,6 @@ def get_class(arg):
 def run_pahole(args=[]):
     #list of args passed in
     args =["pahole"]+args+["e1000.ko"]
-    
     val=sp.check_output(args)
     return val
 #===================PRINTING FUNCTIONS===================
@@ -159,7 +186,7 @@ def printAll():
 	global theData
 	for item in theData:
 		if not item:
-			print "*"*80
+			print("*"*80)
 			continue
 		printItem(item)
 
@@ -171,16 +198,16 @@ def printItem(item):
 	data = item[4]
 	tabs = "\t" * item[5]
 	if not t and not size and not offset and not data:
-		print tabs+ "============"+name+"============"
+		print(tabs+ "============"+name+"============")
 	else:
 		if not t:
-			print tabs+"Name: Unknown "+name
+			print(tabs+"Name: Unknown "+name)
 		else:
-			print tabs+"Name: "+t+" "+name
+			print(tabs+"Name: "+t+" "+name)
 			
-		print tabs+"Size: "+str(size)
+		print(tabs+"Size: "+str(size))
 		
-		print tabs+"Offset: "+str(offset)
+		print(tabs+"Offset: "+str(offset))
 			
 		if data:
 
@@ -208,16 +235,24 @@ def printItem(item):
 				## sizes, which gives us the product of all elements
 				## in the list.
 				##
-				numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
-				elementSize = size / numElements
+				if (pyversion == 2):
+					numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+					elementSize = size / numElements
+
+				else:
+					numElements = functools.reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+					elementSize = int(size / numElements)
 
 				## Attempt to translate each array element.
 				##
-				for x in xrange(numElements):
+				if (pyversion == 2):
+					for x in xrange(numElements):
+						translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)]) + ' '
 
-					translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)])
-					translatedData += ' '
-
+				else:
+					for x in range(numElements):
+						translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)]) + ' '
+			
 			## (if 'data' does not represent an array)
 			##
 			else:
@@ -226,7 +261,7 @@ def printItem(item):
 
 			## Print final result.
 			##
-			print translatedData
+			print(translatedData)
 
 #===================TRANSLATOR===================
 ## Provides modular implementation of type specific tranlations from binary
@@ -280,12 +315,18 @@ def defaultTranslator(rawValue):
 	# when they are both false then system is little endian, but -le is not set
 	# in either case the endianness needs flipped
 	if args.little_endian == big_endian:
-		return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+		if (pyversion == 2):
+			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+		else:
+			return "0x" + ''.join(["%02X" % x for x in reversed(rawValue)]).strip()
+			
 	else:
 		# Otherwise, data is already in desired endianness
-		return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
+		if (pyversion == 2):
+			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
 
-
+		else:
+			return "0x" + ''.join(["%02X" % x for x in rawValue]).strip()
 
 ## Type-specific defintions.
 ## -------------------------
@@ -305,6 +346,11 @@ def char_translator(rawValue):
 	##
 	c = str(unpack('@c', rawValue)[0])
 	
+	if (pyversion == 2):
+		c = str(unpack('@c', rawValue)[0])
+	else:
+		c = str(unpack('@c', rawValue)[0].decode("utf-8"))
+
 	if ord(c) > 32 and ord(c) < 127:
 
 		## Return printable character.
@@ -479,11 +525,11 @@ def nameSearch(arg):
 		match = re.search(arg,item[1])
 		if match:
 			found = found+1
-			print "=========Item "+str(found)+" ============"
+			print("=========Item "+str(found)+" ============")
 			printItem(item)
 			if not item[2]:
 				printItem(theData[i+1])
-	print "Found "+str(found)+" items"
+	print("Found "+str(found)+" items")
 #===================RUN SOMETHING===================
 driver_name, dataItems = readFile()
 mapStructs(dataItems)

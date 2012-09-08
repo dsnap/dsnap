@@ -27,9 +27,9 @@
 *******************************************************************************/
 
 #include "e1000.h"
-#include "loki.h"
 #include <net/ip6_checksum.h>
 #include <linux/io.h>
+#include <linux/loki.h>
 #include <linux/prefetch.h>
 #include <linux/bitops.h>
 #include <linux/if_vlan.h>
@@ -955,9 +955,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	u16 tmp = 0;
 	u16 eeprom_apme_mask = E1000_EEPROM_APME;
 	int bars, need_ioport;
+	char filename[512];
 
-	loki_init(e1000_driver_name, pdev->bus->number);
-	
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
 	if (need_ioport) {
@@ -993,8 +992,6 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	adapter->msg_enable = (1 << debug) - 1;
 	adapter->bars = bars;
 	adapter->need_ioport = need_ioport;
-
-	loki_add_to_blob("driver_name", "e1000", 4);
 
 	hw = &adapter->hw;
 	hw->back = adapter;
@@ -1132,7 +1129,6 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	if (!is_valid_ether_addr(netdev->perm_addr))
 		e_err(probe, "Invalid MAC Address\n");
 
-
 	INIT_DELAYED_WORK(&adapter->watchdog_task, e1000_watchdog);
 	INIT_DELAYED_WORK(&adapter->fifo_stall_task,
 			  e1000_82547_tx_fifo_stall_task);
@@ -1242,6 +1238,16 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	e_info(probe, "Intel(R) PRO/1000 Network Connection\n");
 
 	cards_found++;
+	 
+	/* initialize Loki */
+	adapter->loki_dir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL);
+	snprintf(filename, 512, "%02X_%02X_%1X",
+		pdev->bus->number,
+		PCI_SLOT(pdev->devfn),
+		PCI_FUNC(pdev->devfn));
+
+	loki_init(e1000_driver_name, adapter->loki_dir, filename, "/debug");
+
 	return 0;
 
 err_register:
@@ -1281,11 +1287,11 @@ static void __devexit e1000_remove(struct pci_dev *pdev)
 	struct net_device *netdev = pci_get_drvdata(pdev);
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
+	
+	loki_cleanup(adapter->loki_dir);
 
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
-	
-	loki_cleanup();
 	
 	unregister_netdev(netdev);
 
@@ -2450,9 +2456,9 @@ static void e1000_watchdog(struct work_struct *work)
 
 	mutex_lock(&adapter->mutex);
 	
-	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring));	
-	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring));	
-	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter));	
+	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring), adapter->loki_dir);	
+	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring), adapter->loki_dir);	
+	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter), adapter->loki_dir);	
 	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)

@@ -1,2 +1,0 @@
-This file will be used for testing git-push process.
-- David Huddleson
