@@ -27,9 +27,9 @@
 *******************************************************************************/
 
 #include "e1000.h"
+#include "loki.h"
 #include <net/ip6_checksum.h>
 #include <linux/io.h>
-#include <linux/loki.h>
 #include <linux/prefetch.h>
 #include <linux/bitops.h>
 #include <linux/if_vlan.h>

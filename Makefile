@@ -1,7 +1,7 @@
 obj-y := test-driver/e1000/ src/
 
 all:
-	$(shell cp -f src/loki.h /lib/modules/$(shell uname -r)/build/include/linux)
+	$(shell cp -f src/loki.h test-driver/e1000)
 	make -C /lib/modules/$(shell uname -r)/build \
 	M=$(PWD)
 	
