@@ -1,0 +1,131 @@
+////////////////////////////////////////////////////////////////////////////////
+//	
+//  Loki
+//  A driver state snapshot utility
+//	
+////////////////////////////////////////////////////////////////////////////////
+
+ CONTENTS
+--------------------------------------------------------------------------------
+ 1. What is Loki?
+ 2. Requirements
+ 3. Installation
+ 4. Usage
+ 5. Contact
+--------------------------------------------------------------------------------
+
+================================================================================
+ 1. What is Loki?
+================================================================================
+
+ Loki adds additional driver debugging capabilities into device drivers. The
+ utility takes snapshots of the driver state and allows users to retrieve these
+ snapshots with a user-space tool. This capability gives users invaluable
+ information in the event that an error occurs while the driver is in use,
+ thereby providing a faster, simpler debugging process.
+
+
+================================================================================
+ 2. Requirements
+================================================================================
+
+ To use the driver snapshot tool, your kernel must have debug symbols enabled,
+ and debugfs must be enabled and mounted. To use the user-space data retrieval
+ tool, your system must have pahole and python (version 2 or 3) installed.
+
+
+================================================================================
+ 3. Setup
+================================================================================
+
+ Loki consists of two components: the driver snapshot tool and the user-space
+ data retrieval tool. The snapshot tool must be integrated into your driver
+ code in order to run the Loki user-space tool. This process consists of the
+ following steps:
+
+	1. Initialization
+	
+	The loki_init() function creates a directory within the debugfs root
+	directory that will store the snapshot of each driver running Loki.
+	Among other things, the function requires a loki_dir object. This
+	struct is the data structure that holds the snapshot and is used by
+	most Loki functions. For this reason, the loki_dir object needs to be
+	the same object for each Loki call in the driver. An easy way to do
+	this is to add a loki_struct object to one of the driver's main data
+	structures that is passed around.
+	
+	
+	2. Adding data
+	
+	The loki_add_to_blob() function tells Loki what driver data to capture
+	in the snapshot. Adding a call to loki_add_to_blob() will capture the
+	the specified data every time the driver reaches that call. While data 
+	is stored in memory and not on disk, it is still recommended to avoid
+	adding data to the snapshot in driver code hotpaths in order to avoid
+	performance drops.
+	
+	
+	3. Cleanup
+	
+	Cleanup is simple. Just call loki_cleanup using the same loki_dir
+	object that you've been passing into the other Loki functions. This
+	will free all memory allocated by Loki, as well as any files and
+	directories created for Loki by debugfs.
+
+
+================================================================================
+ 4. Building
+================================================================================
+
+ Once you've added the Loki driver snapshot code to your driver, it's time to
+ build Loki and your driver simultaneously using the following steps:
+
+	1. Change to the root directory
+	
+	2. Run 'make DRIVER=<driver-name>', where <driver-name> is the name
+	   of the driver you want to test on (e.g. make DRIVER=e1000).	
+
+	3. Run 'make install DRIVER=<driver-name>'
+
+ The Loki module and the driver module must be compiled simultaneously in order
+ for the driver to see Loki's exported symbols. To achieve this, both Loki and
+ your driver have individual makefiles which are, in turn, run by the joint
+ makefile in the root directory of the repository.
+
+
+================================================================================
+ 4. User-space Tool Usage
+================================================================================
+
+ Once the data has been captured by the driver snapshot tool, it can be
+ retrieved with the user-space tool. The tool is run using the following
+ syntax, where 'path' is the path to a Loki snapshot file:
+		
+	python loki.py [-h] [-S <string or regex>] [-V] [-le] path
+
+ Options:
+		
+	-S, --search
+		Search for the specified string or regular expression
+					
+	-V, --version
+		Display version information
+					
+	-le, --little-endian
+		Display hex data in little endian
+
+		
+================================================================================
+ 5. Contact
+================================================================================
+
+ All authors are listed below. The current active maintainers are David, Kyle
+ John, and Jacob.
+
+ David Huddleson
+ Kyle Pelton		<peltonkyle@gmail.com>
+ Devin Quirozoliver
+ Ekaterina Ryabtseva
+ John Sackey		<sackey@gmail.com>
+ Jacob Sowles		<sowlesj@gmail.com>
+
