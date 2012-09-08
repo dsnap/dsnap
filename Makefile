@@ -5,7 +5,7 @@ all:
 	make -C /lib/modules/$(shell uname -r)/build \
 	M=$(PWD)
 	
-load:
+install:
 	$(shell rmmod e1000)
 	$(shell rmmod loki)
 	$(shell insmod src/loki.ko)
