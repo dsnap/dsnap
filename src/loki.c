@@ -18,7 +18,7 @@ static const int magic_number = 0x696b6f4c;	/* "Loki" in ASCII */
 static const u8 format_version = 1;
 
 MODULE_AUTHOR("David Huddleson <huddlesd@cs.pdx.edu>, "
-		"Kyle Pelton <kpelton@cs.pdx.edu>, "
+		"Kyle Pelton <peltonkyle@gmail.com>, "
 		"Devin Quirozoliver <arik182@cs.pdx.edu>, "
 		"Ekaterina Ryabtseva <ekaterir@cs.pdx.edu>, "
 		"John Sackey <sackey@gmail.com>, "
