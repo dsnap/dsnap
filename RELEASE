@@ -13,6 +13,7 @@
 	- Driver state snapshot tool
 		- Capture driver data at specified points
 		- Compatible with any device driver
+		- Can run on multiple drivers concurrently
 
 	- User-space data retrieval tool
 		- Retrieve data from driver snapshot
