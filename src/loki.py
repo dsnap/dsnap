@@ -1,8 +1,11 @@
-#
-# loki.py - A user space tool to read/display Loki records.
-# 
-# Supported version of Loki record format: 1
-#
+#///////////////////////////////////////////////////////////////////////////////
+#//
+#//  Loki - loki.py
+#//
+#//  This file is a user space tool that reads and displays driver snapshots.
+#//  Supported version of Loki record format: 1
+#//
+#///////////////////////////////////////////////////////////////////////////////
 
 import sys
 from struct import * 		# For use of unpack instead of struct.unpack.

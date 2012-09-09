@@ -1,3 +1,14 @@
+#///////////////////////////////////////////////////////////////////////////////
+#//
+#//  Loki - Makefile
+#//
+#//  This Makefile builds Loki and the specified driver simultaneously by
+#//  calling the individual makefiles of Loki and the driver in their
+#//  their respective directories. This allows the diriver to access Loki's
+#//  exported symbols.
+#//
+#///////////////////////////////////////////////////////////////////////////////
+
 KERNEL_DIR = "/lib/modules/$(shell uname -r)/build"
 SOURCE_DIR = "src"
 DRIVER_DIR = "test-drivers"

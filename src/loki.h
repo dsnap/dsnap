@@ -1,3 +1,10 @@
+/**
+ * Loki - loki.h
+ *
+ * This file provides the data structures and function headers for those
+ * functions that are accessible to device drivers.
+ */
+
 #ifndef _LOKI_H_
 #define _LOKI_H_
 

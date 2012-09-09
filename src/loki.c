@@ -1,9 +1,16 @@
+/**
+ * Loki - loki.c
+ *
+ * This file provides the implementation of Loki's core driver-side
+ * functionality.
+ */
+
+#include "loki.h"
 #include <linux/debugfs.h>
 #include <linux/err.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
-#include "loki.h"
 
 /* GLOBALS */
 
