@@ -34,6 +34,7 @@
  and debugfs must be enabled and mounted. To use the user-space data retrieval
  tool, your system must have pahole and python (version 2 or 3) installed.
 
+ To check if all system requrements are met, run the ./configure.sh script.
 
 ================================================================================
  3. Setup
