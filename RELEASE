@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Release Notes
+//
+////////////////////////////////////////////////////////////////////////////////
+
+================================================================================
+ 2012-09-09	v1.0
+================================================================================
+
+ Features:
+
+	- Driver state snapshot tool
+		- Capture driver data at specified points
+		- Compatible with any device driver
+
+	- User-space data retrieval tool
+		- Retrieve data from driver snapshot
+		- Search for data by string or regular expression
+		- Display results in big- or little-endian
+
