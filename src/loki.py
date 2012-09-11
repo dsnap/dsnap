@@ -202,10 +202,8 @@ def run_pahole(args=[]):
 def printAll():
 	global theData
 	for item in theData:
-		if not item:
-			print("*"*80)
-			continue
-		printItem(item)
+		if item:
+			printItem(item)
 
 def printItem(item):
 	t = item[0] 
@@ -213,28 +211,32 @@ def printItem(item):
 	size = item[2]
 	offset = item[3]
 	data = item[4]
-	tabs = "\t" * item[5]
+	header_indent = "\t" * item[5]
+	item_indent = header_indent + "   "
+
 	if not t and not size and not offset and not data:
-		print(tabs+ "============"+name+"============")
+		# Extend divider to 80 characters.
+		print("\n" + header_indent + "========== " + name + " "
+			+ ("=" * (80 - (item[5] * len("\t".expandtabs()))
+			- len(name) - 2 - 10)))
+
 	else:
 		if not t:
-			print(tabs+"Name: Unknown "+name)
+			print("\n" + item_indent + "Name:\tUnknown " + name)
 		else:
-			print(tabs+"Name: "+t+" "+name)
+			print("\n" + item_indent + "Name:\t" + t + " " + name)
 			
-		print(tabs+"Size: "+str(size))
-		
-		print(tabs+"Offset: "+str(offset))
+		print(item_indent + "Size:\t" + str(size))
+		print(item_indent + "Offset:\t" + str(offset))
 			
 		if data:
-
 			## Print data in a more readable format.
 			## -------------------------------------
 			##
 
 			## Add label to output string.
 			##
-			translatedData = tabs + "Value: "
+			translatedData = item_indent + "Value:\t"
 
 			## Find all array dimension size values, if any.
 			##
@@ -532,25 +534,35 @@ def bool_translator(rawValue):
 	return str(unpack('?',rawValue)[0])
 
 addTranslator("bool",bool_translator)
-#===================SEARCH FUNCTIONS===================
+
+# ========== SEARCH ========== #
+
+'''
+Searches for and prints data by the specified string or regular expression.
+'''
 def nameSearch(arg):
 	found = 0
+
 	for i,item in enumerate(theData):
 		if not item:
 			continue
 			
-		match = re.search(arg,item[1])
+		match = re.search(arg, item[1])
+		
 		if match:
-			found = found+1
-			print("=========Item "+str(found)+" ============")
+			found = found + 1
+			print("\n========== Item " + str(found) + " "
+				+ ("=" * (80 - 17 - len(str(found)))))
 			printItem(item)
+
 			if not item[2]:
-				printItem(theData[i+1])
-	print("Found "+str(found)+" items")
+				printItem(theData[i + 1])
+
+	print("\nFound " + str(found) + " items.")
+
 #===================RUN SOMETHING===================
 driver_name, dataItems = readFile()
 mapStructs(dataItems)
-print("Driver name: " + driver_name)
 if args.search:
 	nameSearch(args.search)
 else:
