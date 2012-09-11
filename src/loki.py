@@ -44,76 +44,82 @@ if (pack("h", 1) == "\000\001"):
 else:
 	big_endian = False
 
-#===================READ RECORRDS===================
+# ========== READ RECORDS ========== #
 
+'''
+Reads the record file and returns a tuple.
+@return: a data tuple (driver name and data items).
+'''
 def readFile():
-	'''Reads the record file and returns the tuple (driver_name,dataItems) '''
-	
-	#record File is in args.filename
 	recF = args.filename 
 
-	#Read the;	magic number, record file version, size of driver name, 
-	#			driver name, and recordCount from record file.
 	try:
-		magicNum, = unpack("4s",recF.read(4)) #magic number
+		magicNum, = unpack("4s", recF.read(4))
 		
-		if (pyversion == 3):
+		if pyversion == 3:
 			magicNum = magicNum.decode("utf-8");
 
 		if not magicNum == "Loki":
 			print("Not a loki record file!")
 			exit(2)
 			
-		recFVersion, = unpack("B", recF.read(1)) #Version of recF format
+		recFVersion, = unpack("B", recF.read(1))
+
 		if recFVersion != 1: 
-			print("Userspace tool is for version 1 record file only!")
+			print("Userspace tool is for version 1 record file "
+				+ "only!")
 			exit(2)
 			
-		namesize, = unpack("I", recF.read(4) ) #size in char of driver name
-		driver_name,recordCount = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4)) #name, record count
-	
-		if (pyversion == 3):
+		namesize, = unpack("I", recF.read(4))	# Chars in driver name.
+		driver_name, recordCount = unpack(("=" + str(namesize) + "s"
+						+ " I"),
+						recF.read(namesize + 4))
+
+		if pyversion == 3:
 			driver_name = driver_name.decode("utf-8")
 
 	except OverflowError as e:
 		print("%s" %e)
 		print("The record may be corrupt")
 		sys.exit(2)
+
 	except Exception as e:
-		print('Unspecified Error reading record file: %s' %e)
+		print("Unspecified Error reading record file: %s" %e)
 		sys.exit(2)
 		
-	
-		
-	#some tmp vars to hold pieces of each item
 	name = ""
 	namesize = 0
 	itemSize = 0
 	dataItems = []
 
-	#for each record add a tuple to dataitems
+	# For each record, add a tuple to dataitems.
 	for i in range(recordCount):
-		#get the size of name, the name, and size of data from each item
 		try:
-			namesize, = unpack("I", recF.read(4) )
-			name,itemSize = unpack(("="+str(namesize)+"s"+" I"), recF.read(namesize+4))
+			namesize, = unpack("I", recF.read(4))
+			name, itemSize = unpack(("=" + str(namesize) + "s"
+						+ " I"),
+						recF.read(namesize + 4))
 
-			if (pyversion == 3):
+			if pyversion == 3:
 				name = name.decode("utf-8")
 
 		except OverflowError as e:
 			print("%s" %e)
-			print("Record file is either corrupt or lying about version")
+			print("Record file is either corrupt or lying about "
+				+ "version")
 			sys.exit(2)
+
 		except Exception as e:
-			print('Error reading record: %s' %e)
+			print("Error reading record: %s" %e)
 			sys.exit(2)
 
 		data = recF.read(itemSize)
-		dataItems.append( (name,itemSize,data))
+		dataItems.append((name, itemSize, data))
 
 	recF.close()
-	return (driver_name,dataItems)
+
+	return (driver_name, dataItems)
+
 '''
 After calling mapStructs theData is a list of tuples t such that:
 	- t = None ->  the start of a new item from dataItems
