@@ -8,30 +8,38 @@
 #///////////////////////////////////////////////////////////////////////////////
 
 import sys
-from struct import * 		# For use of unpack instead of struct.unpack.
-import subprocess as sp 	# Used to call pahole.
-import re 			# Regular expression support for search.
 import argparse 		# Command line argument parsing.
 import functools		# For python3 reduce() function.
+import re 			# Regular expression support for search.
+import subprocess as sp 	# Used to call pahole.
+
+from struct import * 		# For use of unpack instead of struct.unpack.
 
 pyversion = 2 if sys.version_info < (3, 0, 0) else 3
 theData	= []
 
-# ========== ARGUMENT PARSING ========== #
+# ========== PARSE ARGUMENTS ========== #
 
 # Make a parser object.
-parser = argparse.ArgumentParser(description = "A tool to read loki generated Record files")
+parser = argparse.ArgumentParser(description = "A tool to read loki snapshots.")
 
 # Add arguments to the parser.
-parser.add_argument("filename", help = "A valid Loki record file", type = argparse.FileType('rb'))
-parser.add_argument("-S", "--search", help = "Search for items by name from the record file.", metavar = "<string or regex>")
-parser.add_argument("-V", "--version", help = "Displays version information", action = "version", version = "%(prog)s 2.718")
-parser.add_argument("-le", "--little-endian", help = "Flag to display hex data in little endian", action = "store_true")
+parser.add_argument("filename", help = "A valid Loki record file",
+			type = argparse.FileType('rb'))
+
+parser.add_argument("-S", "--search", help = "Search for items by name from " +
+			"the record file.", metavar = "<string or regex>")
+
+parser.add_argument("-V", "--version", help = "Displays version information",
+			action = "version", version = "%(prog)s 2.718")
+
+parser.add_argument("-le", "--little-endian", help = "Flag to display hex " +
+			"data in little endian", action = "store_true")
 
 args = parser.parse_args()
 
 # Set big_endian based on system, used later on for printing based on -le flag.
-if (pack("h",1) == "\000\001"):
+if (pack("h", 1) == "\000\001"):
 	big_endian = True
 else:
 	big_endian = False
