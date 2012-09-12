@@ -560,20 +560,12 @@ def nameSearch(arg):
 
 	print("\nFound " + str(found) + " items.")
 
-#===================RUN SOMETHING===================
+# ========== EXECUTE ========== #
+
 driver_name, dataItems = readFile()
 mapStructs(dataItems)
+
 if args.search:
 	nameSearch(args.search)
 else:
 	printAll()
-
-
-
-
-
-
-
-
-
-
