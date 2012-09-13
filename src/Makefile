@@ -1,11 +1,11 @@
 #///////////////////////////////////////////////////////////////////////////////#//
-#//  Loki - Makfile
+#//  dsnap - Makfile
 #//
-#//  This is the makefile that builds the Loki module.
+#//  This is the makefile that builds the dsnap module.
 #//
 #///////////////////////////////////////////////////////////////////////////////
 
-obj-m += loki.o
+obj-m += dsnap.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build \

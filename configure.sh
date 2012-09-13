@@ -1,8 +1,8 @@
 #///////////////////////////////////////////////////////////////////////////////
 #//
-#//  Loki - configure.sh
+#//  dsnap - configure.sh
 #//
-#//  Checks to ensure all system requirements are met in order to use Loki.
+#//  Checks to ensure all system requirements are met in order to use dsnap.
 #//
 #///////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ fi
 echo ""
 
 if [ "$fail" == true ]; then
-	echo "Your system does not meet the requirements to run Loki."
+	echo "Your system does not meet the requirements to run dsnap."
 else
 	echo "System check complete. All requirements met."
 fi

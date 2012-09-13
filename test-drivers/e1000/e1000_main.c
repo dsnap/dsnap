@@ -27,7 +27,7 @@
 *******************************************************************************/
 
 #include "e1000.h"
-#include "loki.h"
+#include "dsnap.h"
 #include <net/ip6_checksum.h>
 #include <linux/io.h>
 #include <linux/prefetch.h>
@@ -1239,14 +1239,14 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 
 	cards_found++;
 	 
-	/* initialize Loki */
-	adapter->loki_dir = kmalloc(sizeof(struct loki_dir), GFP_KERNEL);
+	/* initialize dsnap */
+	adapter->dsnap_dir = kmalloc(sizeof(struct dsnap_dir), GFP_KERNEL);
 	snprintf(filename, 512, "%02X_%02X_%1X",
 		pdev->bus->number,
 		PCI_SLOT(pdev->devfn),
 		PCI_FUNC(pdev->devfn));
 
-	loki_init(e1000_driver_name, adapter->loki_dir, filename, "/debug");
+	dsnap_init(e1000_driver_name, adapter->dsnap_dir, filename, "/debug");
 
 	return 0;
 
@@ -1288,7 +1288,7 @@ static void __devexit e1000_remove(struct pci_dev *pdev)
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
 	
-	loki_cleanup(adapter->loki_dir);
+	dsnap_cleanup(adapter->dsnap_dir);
 
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
@@ -2456,9 +2456,9 @@ static void e1000_watchdog(struct work_struct *work)
 
 	mutex_lock(&adapter->mutex);
 	
-	loki_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring), adapter->loki_dir);	
-	loki_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring), adapter->loki_dir);	
-	loki_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter), adapter->loki_dir);	
+	dsnap_add_to_blob("e1000_rx_ring", adapter->rx_ring, sizeof(struct e1000_rx_ring), adapter->dsnap_dir);	
+	dsnap_add_to_blob("e1000_tx_ring", adapter->tx_ring, sizeof(struct e1000_tx_ring), adapter->dsnap_dir);	
+	dsnap_add_to_blob("e1000_adapter", adapter, sizeof(struct e1000_adapter), adapter->dsnap_dir);	
 	
 	link = e1000_has_link(adapter);
 	if ((netif_carrier_ok(netdev)) && link)

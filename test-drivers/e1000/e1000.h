@@ -313,8 +313,8 @@ struct e1000_adapter {
 
 	struct mutex mutex;
 
-	/* Loki */
-	struct loki_dir *loki_dir;
+	/* dsnap */
+	struct dsnap_dir *dsnap_dir;
 	unsigned int bdf_id;
 };
 
