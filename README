@@ -19,11 +19,11 @@
  1. What is dsnap?
 ================================================================================
 
- dsnap adds additional driver debugging capabilities into device drivers. The
- utility takes snapshots of the driver state and allows users to retrieve these
- snapshots with a user-space tool. This capability gives users invaluable
- information in the event that an error occurs while the driver is in use,
- thereby providing a faster, simpler debugging process.
+ dsnap adds additional driver debugging capabilities into Linux device drivers.  The utility takes snapshots of the driver state and allows users to retrieve
+ these snapshots with a user-space tool. This capability gives users invaluable
+ information about the internal state of the driver in the event that the
+ driver crashes while in use, thereby providing a faster, simpler debugging
+ process.
 
 
 ================================================================================
