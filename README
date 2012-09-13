@@ -11,8 +11,8 @@
  2. Requirements
  3. Setup
  4. Building dsnap
- 4. User-space Tool Usage
- 5. Contact
+ 5. User-space tool usage
+ 6. Contact
 --------------------------------------------------------------------------------
 
 ================================================================================
@@ -96,7 +96,7 @@
 
 
 ================================================================================
- 4. User-space Tool Usage
+ 5. User-space tool usage
 ================================================================================
 
  Once the data has been captured by the driver snapshot tool, it can be
@@ -118,7 +118,7 @@
 
 		
 ================================================================================
- 5. Contact
+ 6. Contact
 ================================================================================
 
  All authors are listed below. The current active maintainers are David, Kyle
