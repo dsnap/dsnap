@@ -198,7 +198,7 @@ def run_pahole(args=[]):
 # ========== PRINTING ========== #
 
 '''
-Prints all data.
+Prints all data items.
 '''
 def printAll():
 	global theData
@@ -208,7 +208,7 @@ def printAll():
 
 '''
 Prints a specific data item.
-item: the data item to print
+@item: the data item to print
 '''
 def printItem(item):
 	t = item[0] 
