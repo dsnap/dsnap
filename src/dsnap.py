@@ -302,87 +302,72 @@ def printItem(item):
 			## Print final result.
 			print(translatedData)
 
-#===================TRANSLATOR===================
-## Provides modular implementation of type specific tranlations from binary
-## format to readable format.
-##
-## David Huddleson
-## 8/20/2012
-## Last modified: 8/21/2012
-##
+# ========== TRANSLATORS ========== #
 
+'''
+Translators provide modular implementation of type-specific tranlations from
+binary format to readable format.
+'''
 
-## Declare global objects.
-##
 translators = {}
 
-
-## Main function definition.
-##
+'''
+Provides a modular implementation of type-specific translations from a binary
+format to a more readable format.
+@typeString: The type to translate to.
+@rawValue: The value to translate.
+'''
 def translate(typeString, rawValue):
-
 	if typeString in translators:
-
 		return translators[typeString](rawValue)
 
 	else:
-
 		return defaultTranslator(rawValue)
 
-
-## Helper function definition(s).
-##
+'''
+Adds to a list of translators.
+@typeString: The translator type.
+@translator: The translator to add.
+'''
 def addTranslator(typeString, translator):
-
 	translators[typeString] = translator
 
+'''
+Returns the raw value in hex format: "0xAABBCCDDEEFF...". Endianness is decided
+based on system native and -le flag.
 
-## Translation function definition(s).
-## -----------------------------------
-##
+	args.little_endian: 	true if -le was used
+	big_endian: 		true if system is big endian (set in argparse
+				section above)
 
-## Default translator.
-##
+When both true, then system is big endian, but -le is set. When both are false,
+then system is little endian, but -le is not set.
+'''
 def defaultTranslator(rawValue):
-	## Returns value in hex format: "0xAABBCCDDEEFF..."
-	## Note: endianness is decided based on system native and -le flag
-	##
-	## args.little_endian: true if -le was used
-	## big_endian: true if system is big endian (gets set in argparse section above) 
-
-	# When these are both true then system is big endian, but -le is set
-	# when they are both false then system is little endian, but -le is not set
-	# in either case the endianness needs flipped
+	# Need to change endianness
 	if args.little_endian == big_endian:
 		if (pyversion == 2):
-			return "0x" + ''.join(["%02X" % ord(x) for x in reversed(rawValue)]).strip()
+			return "0x" + ''.join(["%02X" % ord(x)
+					for x in reversed(rawValue)]).strip()
 		else:
-			return "0x" + ''.join(["%02X" % x for x in reversed(rawValue)]).strip()
-			
+			return "0x" + ''.join(["%02X" % x
+					for x in reversed(rawValue)]).strip()
+
+	# Data is already in desired endianness
 	else:
-		# Otherwise, data is already in desired endianness
 		if (pyversion == 2):
-			return "0x" + ''.join(["%02X" % ord(x) for x in rawValue]).strip()
-
+			return "0x" + ''.join(["%02X" % ord(x)
+					for x in rawValue]).strip()
 		else:
-			return "0x" + ''.join(["%02X" % x for x in rawValue]).strip()
+			return "0x" + ''.join(["%02X" % x
+					for x in rawValue]).strip()
 
-## Type-specific defintions.
-## -------------------------
-##
-
-
-## Translator function for char type.
-##
+'''
+Translator function for the char type.
+@rawValue: The binary value to translate.
+'''
 def char_translator(rawValue):
-
-	## Filter out non-printable and whitespace ASCII characters.
-	## We will only print ASCCI characters in the range (33 - 127):
-	##
-	## !"#$%&'()*+,-./0123456789:;<=>?@
-	## ABCDEFGHIJKLMNOPQRSTUVWXYZ\]^_`
-	## abcdefghijklmnopqrstuvwxyz{|}~
-	##
+	# Filter out non-printable and whitespace ASCII characters.
 	c = str(unpack('@c', rawValue)[0])
 	
 	if (pyversion == 2):
@@ -390,168 +375,166 @@ def char_translator(rawValue):
 	else:
 		c = str(unpack('@c', rawValue)[0].decode("utf-8"))
 
+	# Return printable characters.
 	if ord(c) > 32 and ord(c) < 127:
-
-		## Return printable character.
-		##
 		return c
 
+	# Return default byte translation.
 	else:
-		## Return default byte translation.
-		##
 		return defaultTranslator(rawValue)
 
 addTranslator("char", char_translator)
 
-
-## Translator for signed char type.
-##
+'''
+Translator for the signed char type.
+@rawValue: The binary value to translate.
+'''
 def signed_char_translator(rawValue):
-
 	return str(unpack('@b', rawValue)[0])
 
 addTranslator("signed char", signed_char_translator)
 
-
-## Translator for unsigned char type.
-##
+'''
+Translator for the unsigned char type.
+@rawValue: The binary value to translate.
+'''
 def unsigned_char_translator(rawValue):
-
 	return str(unpack('@B', rawValue)[0])
 
 addTranslator("unsigned char", unsigned_char_translator)
 
-
-## Translator for short int type.
-##
+'''
+Translator for the short int type.
+@rawValue: The binary value to translate.
+'''
 def short_int_translator(rawValue):
-
 	return str(unpack('@h', rawValue)[0])
 
 addTranslator("short int", short_int_translator)
 
-
-## Translator for short unsigned int type.
-##
+'''
+Translator for the short unsigned int type.
+@rawValue: The binary value to translate.
+'''
 def short_unsigned_int_translator(rawValue):
-
 	return str(unpack('@H', rawValue)[0])
 
 addTranslator("short unsigned int", short_unsigned_int_translator)
 
-
-## Translator for int type.
-##
+'''
+Translator for the int type.
+@rawValue: The binary value to translate.
+'''
 def int_translator(rawValue):
-
 	return str(unpack('@i', rawValue)[0])
 
 addTranslator("int", int_translator)
 
-
-## Translator for unsigned int type.
-##
+'''
+Translator for the unsigned int type.
+@rawValue: The binary value to translate.
+'''
 def unsigned_int_translator(rawValue):
-
 	return str(unpack('@I', rawValue)[0])
 
 addTranslator("unsigned int", unsigned_int_translator)
 
-
-## Translator for long int type.
-##
+'''
+Translator for the long int type.
+@rawValue: The binary value to translate.
+'''
 def long_int_translator(rawValue):
-
 	return str(unpack('@l', rawValue)[0])
 
 addTranslator("long int", long_int_translator)
 
-
-## Translator for long unsigned int type.
-##
+'''
+Translator for the long unsigned int type.
+@rawValue: The binary value to translate.
+'''
 def long_unsigned_int_translator(rawValue):
-
 	return str(unpack('@L', rawValue)[0])
 
 addTranslator("long unsigned int", long_unsigned_int_translator)
 
-
-## Translator for long long int type.
-##
+'''
+Translator for the long long int type.
+@rawValue: The binary value to translate.
+'''
 def long_long_int_translator(rawValue):
-
 	return str(unpack('@q', rawValue)[0])
 
 addTranslator("long long int", long_long_int_translator)
 
-
-## Translator for long long unsigned int type.
-##
+'''
+Translator for the long long unsigned int type.
+@rawValue: The binary value to translate.
+'''
 def long_long_unsigned_int_translator(rawValue):
-
 	return str(unpack('@Q', rawValue)[0])
 
 addTranslator("long long unsigned int", long_long_unsigned_int_translator)
 
-
-## Translator for float type.
-##
+'''
+Translator for the float type.
+@rawValue: The binary value to translate.
+'''
 def float_translator(rawValue):
-
 	return str(unpack('@f', rawValue)[0])
 
 addTranslator("float", float_translator)
 
-
-## Translator for double type.
-##
+'''
+Translator for the double type.
+@rawValue: The binary value to translate.
+'''
 def double_translator(rawValue):
-
 	return str(unpack('@d', rawValue)[0])
 
 addTranslator("double", double_translator)
 
-
-## Translator for u8 type (unsigned byte value).
-##
+'''
+Translator for the u8 type (unsigned byte value).
+@rawValue: The binary value to translate.
+'''
 def u8_translator(rawValue):
-
 	return str(unpack('=B', rawValue)[0])
 
 addTranslator("u8", u8_translator)
 
-
-## Translator for u16 type (unsigned 16-bit value).
-##
+'''
+Translator for the u16 type (unsigned 16-bit value).
+@rawValue: The binary value to translate.
+'''
 def u16_translator(rawValue):
-
 	return str(unpack('=H', rawValue)[0])
 
 addTranslator("u16", u16_translator)
 
-
-## Translator for u32 type (unsigned 32-bit value).
-##
+'''
+Translator for the u32 type (unsigned 32-bit value).
+@rawValue: The binary value to translate.
+'''
 def u32_translator(rawValue):
-
 	return str(unpack('=L', rawValue)[0])
 
 addTranslator("u32", u32_translator)
 
-
-## Translator for u64 type (unsigned 64-bit value).
-##
+'''
+Translator for the u64 type (unsigned 64-bit value).
+@rawValue: The binary value to translate.
+'''
 def u64_translator(rawValue):
-
 	return str(unpack('=Q', rawValue)[0])
 
 addTranslator("u64", u64_translator)
 
-## Translator for bool type.
-##
-def bool_translator(rawValue):
-	
-	return str(unpack('?',rawValue)[0])
+'''
+Translator for the bool type.
+rawValue: The binary value to translate.
+'''
+def bool_translator(rawValue):	
+	return str(unpack('?', rawValue)[0])
 
 addTranslator("bool",bool_translator)
 
