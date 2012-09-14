@@ -194,18 +194,22 @@ def run_pahole(args=[]):
     args =["pahole"]+args+["e1000.ko"]
     val=sp.check_output(args)
     return val
-#===================PRINTING FUNCTIONS===================
 
-# a print all function, usefull later? Maybe, for now it's mainly a tool 
-# for making sure the other stuff is working correctly
-# prints everything in the global var 'theData' simulates original 
-# userspace output
+# ========== PRINTING ========== #
+
+'''
+Prints all data.
+'''
 def printAll():
 	global theData
 	for item in theData:
 		if item:
 			printItem(item)
 
+'''
+Prints a specific data item.
+item: the data item to print
+'''
 def printItem(item):
 	t = item[0] 
 	name = item[1]
@@ -231,56 +235,56 @@ def printItem(item):
 		print(item_indent + "Offset:\t" + str(offset))
 			
 		if data:
-			## Print data in a more readable format.
-			## -------------------------------------
-			##
-
-			## Add label to output string.
-			##
 			translatedData = item_indent + "Value:\t"
 
 			## Find all array dimension size values, if any.
-			##
 			dimensionSizes = re.findall("\[([0-9]+)\]", name)
 
-			## (if 'data' represents an array)
-			##
+			## Data represents an array.
 			if dimensionSizes:
-
-				## Handles multi-dimensional arrays.
-				##
-				## This is a bit of python's functional programming -
-				## the lambda function will perform multiplication
-				## on successive pairs in the list of array dimension
-				## sizes, which gives us the product of all elements
-				## in the list.
-				##
+				'''
+				Handles multi-dimensional arrays. The lambda
+				function will perform multiplication on
+				successive pairs in the list of array dimension
+				sizes, which gives us the product of all
+				elements in the list.
+				'''
 				if (pyversion == 2):
-					numElements = reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+					numElements = reduce(lambda x, y :
+								int(x) * int(y),
+								dimensionSizes,
+								1)
+					
 					elementSize = size / numElements
 
 				else:
-					numElements = functools.reduce(lambda x, y : int(x) * int(y), dimensionSizes, 1)
+					numElements = functools.reduce(lambda x,
+							y : int(x) * int(y),
+							dimensionSizes,
+							1)
+
 					elementSize = int(size / numElements)
 
-				## Attempt to translate each array element.
-				##
+				# Translate each array element.
 				if (pyversion == 2):
 					for x in xrange(numElements):
-						translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)]) + ' '
+						translatedData += translate(t,
+							data[(x * elementSize):
+							((x * elementSize)
+							+ elementSize)]) + ' '
 
 				else:
 					for x in range(numElements):
-						translatedData += translate(t, data[(x * elementSize):((x * elementSize) + elementSize)]) + ' '
+						translatedData += translate(t,
+							data[(x * elementSize):
+							((x * elementSize)
+							+ elementSize)]) + ' '
 			
-			## (if 'data' does not represent an array)
-			##
+			# Data does not represent an array.
 			else:
-
 				translatedData += translate(t, data)
 
 			## Print final result.
-			##
 			print(translatedData)
 
 #===================TRANSLATOR===================
