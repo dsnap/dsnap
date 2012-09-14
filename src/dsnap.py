@@ -161,13 +161,18 @@ def addStructs(name, data,dsize,level=0):
 	else:
 		theData.append( (None,name,dsize,None,data,level) )
 	return 
-#===================PAHOLE===================	
+
+# ========== PAHOLE ========== #
+
+'''
+TODO
+@arg: 
+'''	
 def get_map(arg):
 	map = {}
 
 	if pyversion == 2:
 		lines = get_class(arg).split("\n")
-
 	else:
 		lines = get_class(arg).split(b"\n")
 
@@ -175,24 +180,34 @@ def get_map(arg):
 		if (pyversion == 3):
 			line = line.decode("utf-8")
  
-		match = re.search("\t(.+[\w\d*])\s\s+(\w.*);.+/*\s+(\d+)\s+(\d+)",line)
+		match = re.search("\t(.+[\w\d*])\s\s+(\w.*);.+/*"
+				+ "\s+(\d+)\s+(\d+)", line)
 
 		if match:
-			t,name,offset,size =match.group(1),match.group(2),match.group(3),match.group(4)
-			map[int(offset)] = (t,name,int(size))
+			t, name, offset, size = match.group(1), match.group(2),
+						match.group(3), match.group(4)
+
+			map[int(offset)] = (t, name, int(size))
 
 	if map != {}:
 		return map
 	else:
 		return None
-            
-def get_class(arg):
-    return run_pahole(["-C",str(arg)])
 
-def run_pahole(args=[]):
-    #list of args passed in
-    args =["pahole"]+args+["e1000.ko"]
-    val=sp.check_output(args)
+'''
+TODO
+@arg: 
+'''
+def get_class(arg):
+    return run_pahole(["-C", str(arg)])
+
+'''
+TODO
+@args:
+'''
+def run_pahole(args = []):
+    args = ["pahole"] + args + ["e1000.ko"]
+    val = sp.check_output(args)
     return val
 
 # ========== PRINTING ========== #
