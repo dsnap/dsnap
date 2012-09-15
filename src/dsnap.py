@@ -184,8 +184,7 @@ def get_map(arg):
 				+ "\s+(\d+)\s+(\d+)", line)
 
 		if match:
-			t, name, offset, size = match.group(1), match.group(2),
-						match.group(3), match.group(4)
+			t, name, offset, size = match.group(1), match.group(2), match.group(3), match.group(4)
 
 			map[int(offset)] = (t, name, int(size))
 
