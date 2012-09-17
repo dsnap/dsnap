@@ -9,26 +9,40 @@
 #//
 #///////////////////////////////////////////////////////////////////////////////
 
-KERNEL_DIR = "/lib/modules/$(shell uname -r)/build"
-SOURCE_DIR = "src"
-DRIVER_DIR = "test-drivers"
-DSNAP = "dsnap"
+KERNEL_DIR = /lib/modules/$(shell uname -r)/build
+SOURCE_DIR = src
+DRIVER_DIR = test-drivers
+DSNAP = dsnap
+USAGE = "usage: make <target> DRIVER=<driver-name>"
 
 obj-y := $(DRIVER_DIR)/$(DRIVER)/ $(SOURCE_DIR)/
 
 all:
-	$(shell cp -f $(SOURCE_DIR)/$(DSNAP).h $(DRIVER_DIR)/$(DRIVER))
+ifeq ($(DRIVER), )
+	@echo $(USAGE)
+else
+	cp -f $(SOURCE_DIR)/$(DSNAP).h $(DRIVER_DIR)/$(DRIVER)
 	make -C $(KERNEL_DIR) \
 	M=$(PWD)
+endif
 	
 install:
-	$(shell rmmod $(DRIVER))
-	$(shell rmmod $(DSNAP))
-	$(shell insmod $(SOURCE_DIR)/$(DSNAP).ko)
-	$(shell insmod $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko)
-	$(shell cp -f $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko $(SOURCE_DIR)/$(DRIVER).ko)
+ifeq ($(DRIVER), )
+	@echo $(USAGE)
+else
+	rmmod $(DRIVER)
+	rmmod $(DSNAP)
+	insmod $(SOURCE_DIR)/$(DSNAP).ko
+	insmod $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko
+	cp -f $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko $(SOURCE_DIR)/$(DRIVER).ko
+endif
 	
 clean:
+ifeq ($(DRIVER), )
+	@echo $(USAGE)
+else
 	make -C $(KERNEL_DIR) \
 	M=$(PWD) \
 	clean
+	rm -rf $(DRIVER_DIR)/$(DRIVER)/$(DSNAP).h
+endif
