@@ -17,6 +17,7 @@
 static const u64 magic_number = 0x70616E7364;	/* "dsnap" in ASCII */
 static const int magic_number_length = 5;
 static const u8 format_version = 1;
+static struct dentry *debugfs_root;
 
 MODULE_AUTHOR("David Huddleson <huddlesd@cs.pdx.edu>, "
 		"Kyle Pelton <peltonkyle@gmail.com>, "
@@ -39,7 +40,6 @@ static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ldir
 static int dsnap_create_record(char *name, void *location, int size,
 				struct dsnap_dir *ldir);
 static void dsnap_construct_blob(struct dsnap_dir *ldir);
-static char *dsnap_set_debugfs_root(char *debugfs_root, char *dir_name);
 
 /* FUNCTIONS */
 
@@ -60,33 +60,20 @@ int init_module(void)
  * @file_name: the name of the blob file
  * @debugfs_root: the path to the debugfs root directory
  */
-void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name,
-		char *debugfs_root)
+void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name)
 {
 	struct file *directory;
+	struct dentry *debugfs_dentry;
 
 	printk(KERN_INFO "dsnap: Initializing...\n");
 
 	ldir->name = kstrdup(dir_name, GFP_KERNEL);
-	ldir->entry = debugfs_create_dir(dir_name, NULL);
-	ldir->path = dsnap_set_debugfs_root(debugfs_root, dir_name);
+	debugfs_dentry = debugfs_create_dir(dir_name, NULL);
 
-	if (!ldir->path)
-		return;
+	if (debugfs_dentry != NULL)
+		debugfs_root = debugfs_dentry;
 
-	if (!ldir->entry) {
-		directory = filp_open(ldir->path, O_APPEND, S_IRWXU);
-		ldir->entry = directory->f_dentry;
-
-		filp_close(directory, NULL);
-
-		if (!ldir->entry) {
-			printk(KERN_ERR "dsnap: Could not open "
-					"directory '%s'.\n",
-					dir_name);
-			return;
-		}
-	} else if (ldir->entry == ERR_PTR(-ENODEV))
+	else if (debugfs_dentry == ERR_PTR(-ENODEV))
 		printk(KERN_ERR "dsnap: Your kernel must have debugfs support "
 				"enabled to run dsnap.\n");
 
@@ -238,7 +225,7 @@ static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ldir)
 		return NULL;
 	}
 
-	entry = debugfs_create_blob(name, S_IRUGO, ldir->entry, blob);
+	entry = debugfs_create_blob(name, S_IRUGO, debugfs_root, blob);
 
 	if (!entry) {
 		printk(KERN_ERR "dsnap: Unable to create blob '%s' "
@@ -394,7 +381,6 @@ void dsnap_cleanup(struct dsnap_dir *ldir)
 	printk(KERN_INFO "dsnap: Cleaning up...\n");
 
 	kfree(ldir->name);
-	kfree(ldir->path);
 	debugfs_remove(ldir->lfile->entry);
 
 	/* Remove master blob */
@@ -410,7 +396,7 @@ void dsnap_cleanup(struct dsnap_dir *ldir)
 		kfree(prev);
 	}
 
-	debugfs_remove(ldir->entry);
+	debugfs_remove(debugfs_root);
 	kfree(ldir->lfile->name);
 	kfree(ldir->lfile);
 	kfree(ldir);
@@ -419,28 +405,6 @@ void dsnap_cleanup(struct dsnap_dir *ldir)
 }
 
 EXPORT_SYMBOL(dsnap_cleanup);
-
-/**
- * Stores the path name of the debugfs root directory.
- * @debugfs_root: the path to the debugfs root directory
- * @dir_name: the name of the device directory
- */
-static char *dsnap_set_debugfs_root(char *debugfs_root, char *dir_name)
-{
-	int length = strlen(debugfs_root) + strlen(dir_name) + 1 + 1;
-	char *path = kmalloc(length, GFP_KERNEL);
-
-	if (!debugfs_root) {
-		printk(KERN_ERR "dsnap: Invalid debugfs root directory.\n");
-		return NULL;
-	}
-
-	strcpy(path, debugfs_root);
-	strcat(path, "/");
-	strcat(path, dir_name);
-
-	return path;
-}
 
 /**
  * Unloads the kernel module.

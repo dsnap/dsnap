@@ -16,8 +16,6 @@
  */
 struct dsnap_dir {
 	char *name;
-	struct dentry *entry;
-	char *path;
 	struct dsnap_file *lfile;
 };
 
@@ -48,7 +46,7 @@ struct dsnap_record {
 };
 
 extern void dsnap_init(char *dir_name, struct dsnap_dir *dsnap_dir,
-			char *file_name, char *debugfs_root);
+			char *file_name);
 extern void dsnap_cleanup(struct dsnap_dir *ldir);
 extern void dsnap_add_to_blob(char *name, void *location, int size,
 				struct dsnap_dir *ldir);
