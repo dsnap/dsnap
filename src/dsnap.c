@@ -49,7 +49,6 @@ int init_module(void)
  */
 void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name)
 {
-	struct file *directory;
 	struct dentry *debugfs_dentry;
 
 	printk(KERN_INFO "dsnap: Initializing...\n");
