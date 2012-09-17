@@ -583,7 +583,7 @@ def nameSearch(arg):
 			if not item[2]:
 				printItem(theData[i + 1])
 
-	print("\nFound " + str(found) + " items.")
+	print("\nFound " + str(found) + " items.\n")
 
 
 
