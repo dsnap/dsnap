@@ -19,19 +19,6 @@ static const int magic_number_length = 5;
 static const u8 format_version = 1;
 static struct dentry *debugfs_root;
 
-MODULE_AUTHOR("David Huddleson <huddlesd@cs.pdx.edu>, "
-		"Kyle Pelton <peltonkyle@gmail.com>, "
-		"Devin Quirozoliver <arik182@cs.pdx.edu>, "
-		"Ekaterina Ryabtseva <ekaterir@cs.pdx.edu>, "
-		"John Sackey <sackey@gmail.com>, "
-		"Jacob Sowles <sowlesj@gmail.com>");
-
-MODULE_DESCRIPTION("Adds driver state snapshot capabilities "
-			"to device drivers.");
-
-MODULE_LICENSE("GPL");
-MODULE_VERSION("1.0");
-
 /* PROTOTYPES */
 
 static struct dsnap_file *dsnap_create_file(char *name);
@@ -413,3 +400,15 @@ void cleanup_module(void)
 {
 	printk(KERN_INFO "dsnap: Module unloaded.\n");
 }
+
+MODULE_AUTHOR("David Huddleson <huddlesd@cs.pdx.edu>, "
+		"Kyle Pelton <peltonkyle@gmail.com>, "
+		"Devin Quirozoliver <arik182@cs.pdx.edu>, "
+		"Ekaterina Ryabtseva <ekaterir@cs.pdx.edu>, "
+		"John Sackey <sackey@gmail.com>, "
+		"Jacob Sowles <sowlesj@gmail.com>");
+
+MODULE_DESCRIPTION("A driver state snapshot utility.");
+
+MODULE_LICENSE("GPL");
+MODULE_VERSION("1.0");
