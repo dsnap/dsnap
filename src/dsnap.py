@@ -18,7 +18,9 @@ from struct import * 		# For use of unpack instead of struct.unpack.
 pyversion = 2 if sys.version_info < (3, 0, 0) else 3
 theData	= []
 
-# ========== PARSE ARGUMENTS ========== #
+
+
+# == ARGUMENT PARSING ==========================================================
 
 # Make a parser object.
 parser = argparse.ArgumentParser(description = "A tool to read dsnap snapshots.")
@@ -44,7 +46,9 @@ if (pack("h", 1) == "\000\001"):
 else:
 	big_endian = False
 
-# ========== READ RECORDS ========== #
+
+
+# == RECORD READING ============================================================
 
 '''
 Reads the record file and returns a tuple.
@@ -174,7 +178,9 @@ def addStructs(name, data, dsize, level = 0):
 
 	return 
 
-# ========== PAHOLE ========== #
+
+
+# == PAHOLE ====================================================================
 
 '''
 TODO
@@ -221,7 +227,9 @@ def run_pahole(args = []):
     val = sp.check_output(args)
     return val
 
-# ========== PRINTING ========== #
+
+
+# == PRINTING ==================================================================
 
 '''
 Prints all data items.
@@ -310,16 +318,17 @@ def printItem(item):
 			else:
 				translatedData += translate(t, data)
 
-			## Print final result.
+			# Print final result.
 			print(translatedData)
 
-# ========== TRANSLATORS ========== #
+
+
+# == TRANSLATORS ===============================================================
 
 '''
 Translators provide modular implementation of type-specific tranlations from
 binary format to readable format.
 '''
-
 translators = {}
 
 '''
@@ -355,7 +364,7 @@ When both true, then system is big endian, but -le is set. When both are false,
 then system is little endian, but -le is not set.
 '''
 def defaultTranslator(rawValue):
-	# Need to change endianness
+	# Need to change endianness.
 	if args.little_endian == big_endian:
 		if (pyversion == 2):
 			return "0x" + ''.join(["%02X" % ord(x)
@@ -364,7 +373,7 @@ def defaultTranslator(rawValue):
 			return "0x" + ''.join(["%02X" % x
 					for x in reversed(rawValue)]).strip()
 
-	# Data is already in desired endianness
+	# Data is already in desired endianness.
 	else:
 		if (pyversion == 2):
 			return "0x" + ''.join(["%02X" % ord(x)
@@ -549,7 +558,9 @@ def bool_translator(rawValue):
 
 addTranslator("bool",bool_translator)
 
-# ========== SEARCH ========== #
+
+
+# == SEARCH ====================================================================
 
 '''
 Searches for and prints data by the specified string or regular expression.
@@ -574,7 +585,9 @@ def nameSearch(arg):
 
 	print("\nFound " + str(found) + " items.")
 
-# ========== EXECUTE ========== #
+
+
+# == EXECUTION =================================================================
 
 driver_name, dataItems = readFile()
 mapStructs(dataItems)
@@ -583,3 +596,4 @@ if args.search:
 	nameSearch(args.search)
 else:
 	printAll()
+
