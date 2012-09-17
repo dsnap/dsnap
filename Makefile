@@ -30,8 +30,12 @@ install:
 ifeq ($(DRIVER), )
 	@echo $(USAGE)
 else
+ifneq ($(shell lsmod | grep -c $(DRIVER)), 0)
 	rmmod $(DRIVER)
+endif
+ifneq ($(shell lsmod | grep -c $(DSNAP)), 0)
 	rmmod $(DSNAP)
+endif
 	insmod $(SOURCE_DIR)/$(DSNAP).ko
 	insmod $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko
 	cp -f $(DRIVER_DIR)/$(DRIVER)/$(DRIVER).ko $(SOURCE_DIR)/$(DRIVER).ko
