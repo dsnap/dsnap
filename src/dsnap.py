@@ -144,22 +144,34 @@ def mapStructs(dataItems):
 		theData.append(None) 
 		addStructs(name, data, dsize)
 
-#Helper function for mapStructs, recursively adds items to theData
-def addStructs(name, data,dsize,level=0):
+'''
+Helper function for mapStructs. Recursively adds items to theData.
+@name: TODO
+@data: TODO
+@dsize: TODO
+@level: TODO
+'''
+def addStructs(name, data, dsize, level = 0):
 	global theData
 	map = get_map(name)
 	
 	if map:
-		theData.append((None,name,None,None,None,level))
+		theData.append((None, name, None, None, None, level))
 		for p in sorted(map.keys()):
 			t,name,size = map[p]
 			if "struct" in t and "*" not in t:
-				theData.append( (t, name, size, p, None, level))
-				addStructs(t.split("struct ")[1],data[p:p+size],size,level+1)
+				theData.append((t, name, size, p, None, level))
+				addStructs(t.split("struct ")[1],
+							data[p:p + size],
+							size,
+							level + 1)
 			else:
-				theData.append( (t,name,size,p,data[p:p+size],level) )
+				theData.append((t, name, size, p,
+						data[p:p + size], level))
+	
 	else:
-		theData.append( (None,name,dsize,None,data,level) )
+		theData.append((None, name, dsize, None, data, level))
+
 	return 
 
 # ========== PAHOLE ========== #
