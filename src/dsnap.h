@@ -16,7 +16,7 @@
  */
 struct dsnap_dir {
 	char *name;
-	struct dsnap_file *lfile;
+	struct dsnap_file *dfile;
 };
 
 /**
@@ -27,7 +27,7 @@ struct dsnap_file {
 	char *name;
 	struct dentry *entry;
 	struct debugfs_blob_wrapper *blob;
-	struct dsnap_record *lrecord;
+	struct dsnap_record *drecord;
 	u8 *master;
 	int records;
 	int tot_size;
@@ -39,16 +39,15 @@ struct dsnap_file {
  */
 struct dsnap_record {
 	char *name;
-	int offset;		/* index of starting location in master blob */
-	int size;		/* index of ending location in master blob */
+	int offset;		/* Index of starting location in master blob. */
+	int size;		/* Index of ending location in master blob. */
 	void *location;
 	struct dsnap_record *next;
 };
 
-extern void dsnap_init(char *dir_name, struct dsnap_dir *dsnap_dir,
-			char *file_name);
-extern void dsnap_cleanup(struct dsnap_dir *ldir);
+extern void dsnap_init(char *dir_name, struct dsnap_dir *ddir, char *file_name);
+extern void dsnap_cleanup(struct dsnap_dir *ddir);
 extern void dsnap_add_to_blob(char *name, void *location, int size,
-				struct dsnap_dir *ldir);
+				struct dsnap_dir *ddir);
 
 #endif

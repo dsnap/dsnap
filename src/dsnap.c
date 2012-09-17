@@ -22,11 +22,11 @@ static struct dentry *debugfs_root;
 /* PROTOTYPES */
 
 static struct dsnap_file *dsnap_create_file(char *name);
-static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ldir);
-static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ldir);
+static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ddir);
+static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ddir);
 static int dsnap_create_record(char *name, void *location, int size,
-				struct dsnap_dir *ldir);
-static void dsnap_construct_blob(struct dsnap_dir *ldir);
+				struct dsnap_dir *ddir);
+static void dsnap_construct_blob(struct dsnap_dir *ddir);
 
 /* FUNCTIONS */
 
@@ -43,17 +43,17 @@ int init_module(void)
 /**
  * Initializes the dsnap framework.
  * @dir_name: the name of the debugfs root directory
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  * @file_name: the name of the blob file
  * @debugfs_root: the path to the debugfs root directory
  */
-void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name)
+void dsnap_init(char *dir_name, struct dsnap_dir *ddir, char *file_name)
 {
 	struct dentry *debugfs_dentry;
 
 	printk(KERN_INFO "dsnap: Initializing...\n");
 
-	ldir->name = kstrdup(dir_name, GFP_KERNEL);
+	ddir->name = kstrdup(dir_name, GFP_KERNEL);
 	debugfs_dentry = debugfs_create_dir(dir_name, NULL);
 
 	if (debugfs_dentry != NULL)
@@ -63,40 +63,40 @@ void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name)
 		printk(KERN_ERR "dsnap: Your kernel must have debugfs support "
 				"enabled to run dsnap.\n");
 
-	ldir->lfile = dsnap_create_file(file_name);
+	ddir->dfile = dsnap_create_file(file_name);
 
-	if (!ldir->lfile) {
+	if (!ddir->dfile) {
 		printk(KERN_ERR "dsnap: Unable to create dsnap file '%s'.\n",
 				file_name);
 		return;
 	}
 
-	ldir->lfile->entry = dsnap_create_blob(ldir->lfile->name, ldir);
+	ddir->dfile->entry = dsnap_create_blob(ddir->dfile->name, ddir);
 
-	if (!ldir->lfile->entry) {
+	if (!ddir->dfile->entry) {
 		printk(KERN_ERR "dsnap: Unable to create blob '%s' "
 				"(dentry is NULL).\n",
-				ldir->lfile->name);
+				ddir->dfile->name);
 		return;
 	}
 
 	/* Set master size */
-	ldir->lfile->tot_size = (sizeof(u32) * 2) +
-				strlen(ldir->name) +
+	ddir->dfile->tot_size = (sizeof(u32) * 2) +
+				strlen(ddir->name) +
 				magic_number_length +
 				sizeof(format_version);
 
 	/* Allocate memory for master */
-	ldir->lfile->master = kmalloc(ldir->lfile->tot_size, GFP_KERNEL);
+	ddir->dfile->master = kmalloc(ddir->dfile->tot_size, GFP_KERNEL);
 
-	if (!ldir->lfile->master) {
+	if (!ddir->dfile->master) {
 		printk(KERN_ERR "dsnap: Unable to allocate memory for "
 				"dsnap master buffer.\n");
 		return;
 	}
 
 	/* Construct initial binary structure */
-	dsnap_construct_blob(ldir);
+	dsnap_construct_blob(ddir);
 
 	printk(KERN_INFO "dsnap: Initialization complete.\n");
 }
@@ -104,18 +104,18 @@ void dsnap_init(char *dir_name, struct dsnap_dir *ldir, char *file_name)
 EXPORT_SYMBOL(dsnap_init);
 
 /**
- * Builds a debugfs binary structure from lfiles.
- * @ldir: the dsnap directory to operate in
+ * Builds a debugfs binary structure from dfiles.
+ * @ddir: the dsnap directory to operate in
  */
-static void dsnap_construct_blob(struct dsnap_dir *ldir)
+static void dsnap_construct_blob(struct dsnap_dir *ddir)
 {
 	struct dsnap_record *curr;
-	struct dsnap_file *root = ldir->lfile;
+	struct dsnap_file *root = ddir->dfile;
 	u8 *c_ptr = root->master;
 	int i = 0;
 
 	/* Zero buffer */
-	for (i = 0; i < ldir->lfile->tot_size; i++)
+	for (i = 0; i < ddir->dfile->tot_size; i++)
 		root->master[i] = 0;
 
 	memcpy(c_ptr, &magic_number, magic_number_length);
@@ -124,15 +124,15 @@ static void dsnap_construct_blob(struct dsnap_dir *ldir)
 	memcpy(c_ptr, &format_version, sizeof(format_version));
 	c_ptr += sizeof(format_version);	/* Jump to module name */
 
-	*((u32 *)c_ptr) = strlen(ldir->name);
+	*((u32 *)c_ptr) = strlen(ddir->name);
 	c_ptr += sizeof(u32);
-	memcpy(c_ptr, ldir->name, strlen(ldir->name));
-	c_ptr += strlen(ldir->name);		/* Jump to count of record */
+	memcpy(c_ptr, ddir->name, strlen(ddir->name));
+	c_ptr += strlen(ddir->name);		/* Jump to count of record */
 
 	*((u32 *)c_ptr) = root->records;
 	c_ptr += sizeof(u32);			/* Jump to first record */
 
-	curr = ldir->lfile->lrecord;
+	curr = ddir->dfile->drecord;
 
 	while (curr != NULL) {
 		if (strlen(curr->name) > 0xffffffff)
@@ -168,36 +168,36 @@ static void dsnap_construct_blob(struct dsnap_dir *ldir)
  */
 static struct dsnap_file *dsnap_create_file(char *name)
 {
-	struct dsnap_file *lfile;
+	struct dsnap_file *dfile;
 
-	lfile = kmalloc(sizeof(struct dsnap_file), GFP_KERNEL);
+	dfile = kmalloc(sizeof(struct dsnap_file), GFP_KERNEL);
 
-	if (!lfile) {
+	if (!dfile) {
 		printk(KERN_ERR "dsnap: Unable to allocate memory for dsnap "
 				"file '%s'.\n",
 				name);
 		return NULL;
 	}
 
-	lfile->name = kstrdup(name, GFP_KERNEL);
-	lfile->entry = NULL;
-	lfile->lrecord = NULL;
+	dfile->name = kstrdup(name, GFP_KERNEL);
+	dfile->entry = NULL;
+	dfile->drecord = NULL;
 
 	/* Location of master buffer */
-	lfile->records = 0;
-	lfile->tot_size = 0;
+	dfile->records = 0;
+	dfile->tot_size = 0;
 
-	return lfile;
+	return dfile;
 }
 
 /**
  * Creates a debugfs blob that holds driver data.
  * @name: the name of the blob
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  * @return: a pointer to the dentry object returned by the
  *          debugfs_create_blob call
  */
-static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ldir)
+static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ddir)
 {
 	struct debugfs_blob_wrapper *blob;
 	struct dentry *entry;
@@ -223,7 +223,7 @@ static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ldir)
 	blob->data = NULL;
 	blob->size = 0;
 
-	ldir->lfile->blob = blob;
+	ddir->dfile->blob = blob;
 
 	return entry;
 }
@@ -233,35 +233,35 @@ static struct dentry *dsnap_create_blob(char *name, struct dsnap_dir *ldir)
  * @name: the name of the data to add
  * @location: the memory location of the data to add
  * @size: the size of the data to add
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  */
 void dsnap_add_to_blob(char *name, void *location, int size,
-			struct dsnap_dir *ldir)
+			struct dsnap_dir *ddir)
 {
-	struct dsnap_record *lrecord;
+	struct dsnap_record *drecord;
 
-	lrecord = dsnap_find_record(name, ldir);
+	drecord = dsnap_find_record(name, ddir);
 	
-	if (!lrecord) {
+	if (!drecord) {
 		/* Data has not been added to blob yet, so add it */
-		if ((dsnap_create_record(name, location, size, ldir)) == -1) {
+		if ((dsnap_create_record(name, location, size, ddir)) == -1) {
 			printk(KERN_ERR "dsnap: Unable to create dsnap "
 					"blob '%s'.\n", name);
 			return;
 		}
 	} else {
 		/* Data already exists in blob */
-		if (size != lrecord->size) {
+		if (size != drecord->size) {
 			printk(KERN_ERR "dsnap: Passed in size not equal "
 					"to size in list\n.");
 			return;
 		}
 
 		/* Change location to value passed in */
-		lrecord->location = location;
+		drecord->location = location;
 		
 		/* Copy data to offset in blob */
-		memcpy(ldir->lfile->master + lrecord->offset, location, size);
+		memcpy(ddir->dfile->master + drecord->offset, location, size);
 	}
 }
 
@@ -272,64 +272,64 @@ EXPORT_SYMBOL(dsnap_add_to_blob);
  * @name: the name of the dsnap record
  * @location: the location of the data to store
  * @size: the size of the data to store
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  * @return: -1 if an error occurs
  *	     0 otherwise
  */
 int dsnap_create_record(char *name, void *location, int size,
-			struct dsnap_dir *ldir)
+			struct dsnap_dir *ddir)
 {
-	struct dsnap_record *lrecord, *curr;
+	struct dsnap_record *drecord, *curr;
 
 	int new_size = size +
-			ldir->lfile->tot_size +
+			ddir->dfile->tot_size +
 			strlen(name) +
 			(sizeof(u32) * 2);	/* Size and count */
 
-	lrecord = kmalloc(sizeof(struct dsnap_record), GFP_KERNEL);
+	drecord = kmalloc(sizeof(struct dsnap_record), GFP_KERNEL);
 
-	if (!lrecord) {
+	if (!drecord) {
 		printk(KERN_ERR "dsnap: Unable to allocate memory for "
 				"dsnap blob '%s'.\n",
 				name);
 		return -1;
 	}
 
-	lrecord->name = kstrdup(name, GFP_KERNEL);
-	lrecord->offset = new_size - size;	/* Record size - data size */
-	lrecord->size = size;			/* Size of data (in bytes) */
-	lrecord->location = location;		/* Address in kernel memory */
+	drecord->name = kstrdup(name, GFP_KERNEL);
+	drecord->offset = new_size - size;	/* Record size - data size */
+	drecord->size = size;			/* Size of data (in bytes) */
+	drecord->location = location;		/* Address in kernel memory */
 
 	/* Add new dsnap blob to the list */
-	if (!ldir->lfile->lrecord) {
-		ldir->lfile->lrecord = lrecord;
+	if (!ddir->dfile->drecord) {
+		ddir->dfile->drecord = drecord;
 	} else {
-		curr = ldir->lfile->lrecord;
+		curr = ddir->dfile->drecord;
 
 		while (curr && curr->next != NULL)
 			curr = curr->next;
 
-		curr->next = lrecord;
+		curr->next = drecord;
 	}
 
-	lrecord->next = NULL;
+	drecord->next = NULL;
 
 	/* Expand master blob to accomodate new data */
-	ldir->lfile->master = krealloc(ldir->lfile->master,
+	ddir->dfile->master = krealloc(ddir->dfile->master,
 					new_size,
 					GFP_KERNEL);
 
-	if (!ldir->lfile->master) {
+	if (!ddir->dfile->master) {
 		printk(KERN_ERR "dsnap: Unable to expand master blob.\n");
 		return -1;
 	}
 
 	/* Set new size and record count */
-	ldir->lfile->tot_size = new_size;
-	ldir->lfile->records++;
+	ddir->dfile->tot_size = new_size;
+	ddir->dfile->records++;
 
 	/* Reconstruct master blob format */
-	dsnap_construct_blob(ldir);
+	dsnap_construct_blob(ddir);
 
 	return 0;
 }
@@ -337,14 +337,14 @@ int dsnap_create_record(char *name, void *location, int size,
 /**
  * Finds a specified dsnap record.
  * @name: the name of the dsnap record to find
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  * @return: a pointer to the dsnap record if found, else null
  */
-static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ldir)
+static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ddir)
 {
 	struct dsnap_record *curr;
 
-	curr = ldir->lfile->lrecord;
+	curr = ddir->dfile->drecord;
 
 	while (curr != NULL) {
 		if ((strcmp(name, curr->name)) == 0)
@@ -358,22 +358,22 @@ static struct dsnap_record *dsnap_find_record(char *name, struct dsnap_dir *ldir
 
 /**
  * Properly disposes of dsnap resources.
- * @ldir: the dsnap directory to operate in
+ * @ddir: the dsnap directory to operate in
  */
-void dsnap_cleanup(struct dsnap_dir *ldir)
+void dsnap_cleanup(struct dsnap_dir *ddir)
 {
 	struct dsnap_record *curr, *prev;
 
 	printk(KERN_INFO "dsnap: Cleaning up...\n");
 
-	kfree(ldir->name);
-	debugfs_remove(ldir->lfile->entry);
+	kfree(ddir->name);
+	debugfs_remove(ddir->dfile->entry);
 
 	/* Remove master blob */
-	kfree(ldir->lfile->master);
+	kfree(ddir->dfile->master);
 
 	/* Remove each llist name */
-	curr = ldir->lfile->lrecord;
+	curr = ddir->dfile->drecord;
 
 	while (curr) {
 		kfree(curr->name);
@@ -383,9 +383,9 @@ void dsnap_cleanup(struct dsnap_dir *ldir)
 	}
 
 	debugfs_remove(debugfs_root);
-	kfree(ldir->lfile->name);
-	kfree(ldir->lfile);
-	kfree(ldir);
+	kfree(ddir->dfile->name);
+	kfree(ddir->dfile);
+	kfree(ddir);
 
 	printk(KERN_INFO "dsnap: Cleanup complete.\n");
 }
