@@ -26,7 +26,6 @@
  driver crashes while in use, thereby providing a faster, simpler debugging
  process.
 
-
 ================================================================================
  2. Requirements
 ================================================================================
@@ -75,7 +74,6 @@
 	will free all memory allocated by dsnap, as well as any files and
 	directories created for dsnap by debugfs.
 
-
 ================================================================================
  4. Building dsnap
 ================================================================================
@@ -94,7 +92,6 @@
  for the driver to see dsnap's exported symbols. To achieve this, both dsnap and
  your driver have individual makefiles which are, in turn, run by the joint
  makefile in the root directory of the repository.
-
 
 ================================================================================
  5. User-space tool usage
@@ -116,7 +113,6 @@
 					
 	-le, --little-endian
 		Display hex data in little endian
-
 		
 ================================================================================
  6. Contact
