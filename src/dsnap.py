@@ -35,12 +35,12 @@ parser.add_argument("-S", "--search", help = "Search for items by name from " +
 parser.add_argument("-V", "--version", help = "Displays version information",
 			action = "version", version = "%(prog)s 2.718")
 
-parser.add_argument("-le", "--little-endian", help = "Flag to display hex " +
+parser.add_argument("-l", "--little-endian", help = "Flag to display hex " +
 			"data in little endian", action = "store_true")
 
 args = parser.parse_args()
 
-# Set big_endian based on system, used later on for printing based on -le flag.
+# Set big_endian based on system, used later on for printing based on -l flag.
 if (pack("h", 1) == "\000\001"):
 	big_endian = True
 else:
@@ -365,14 +365,14 @@ def translate(typeString, rawValue):
 
 '''
 Returns the raw value in hex format: "0xAABBCCDDEEFF...". Endianness is decided
-based on system native and -le flag.
+based on system native and -l flag.
 
-	args.little_endian: 	true if -le was used
+	args.little_endian: 	true if -l was used
 	big_endian: 		true if system is big endian (set in argparse
 				section above)
 
-When both true, then system is big endian, but -le is set. When both are false,
-then system is little endian, but -le is not set.
+When both true, then system is big endian, but -l is set. When both are false,
+then system is little endian, but -l is not set.
 '''
 def defaultTranslator(rawValue):
 	# Need to change endianness.

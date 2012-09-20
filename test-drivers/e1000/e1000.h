@@ -315,7 +315,6 @@ struct e1000_adapter {
 
 	/* dsnap */
 	struct dsnap_dir *dsnap_dir;
-	unsigned int bdf_id;
 };
 
 enum e1000_state_t {
